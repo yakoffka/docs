@@ -4,8 +4,6 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 # Руководство по обновлению
 
-- [Обновление с 9.x версии до 10.0](#upgrade-10.0)
-
 <a name="high-impact-changes"></a>
 ## Изменения, оказывающие большое влияние
 
@@ -231,6 +229,14 @@ php artisan lang:publish
 Устаревшие методы `Bus::dispatchNow` и `dispatch_now` были удалены. Вместо них ваше приложение должно использовать методы `Bus::dispatchSync` и `dispatch_sync` соответственно.
 
 
+<a name="dispatch-return"></a>
+
+#### Возвращаемое значение помощника `dispatch()`
+
+**Вероятность воздействия: Низкая**
+
+Вызов `dispatch` с классом, который не реализует `Illuminate\Contracts\Queue`, ранее возвращал результат метода `handle` этого класса. Однако теперь это будет возвращён экземпляр `Illuminate\Foundation\Bus\PendingBatch`. Вы можете использовать `dispatch_sync()` чтобы вернуться к предыдущему поведению.
+
 ### Маршрутизация
 
 <a name="middleware-aliases"></a>
@@ -295,6 +301,22 @@ public function rules()
         },
     ],
 }
+```
+
+<a name="validation-messages-and-closure-rules"></a>
+#### Сообщения о валидации и правила на основе замыканий
+
+**Вероятность воздействия: Очень низкая**
+
+Ранее вы могли назначить сообщение об ошибке другому ключу, предоставив массив в `$fail` в правилах валидации на основе замыканий. Однако теперь вы должны предоставить ключ в качестве первого аргумента, а сообщение об ошибке - в качестве второго аргумента:
+
+```php
+Validator::make([
+    'foo' => 'string',
+    'bar' => [function ($attribute, $value, $fail) {
+        $fail('foo', 'Something went wrong!');
+    }],
+]);
 ```
 
 <a name="form-request-after-method"></a>
