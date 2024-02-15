@@ -359,17 +359,7 @@ Schema::create('calculations', function (Blueprint $table) {
 
 Построитель схем Blueprint предлагает множество методов, соответствующих различным типам столбцов, которые вы можете добавить в таблицы базы данных. Все доступные методы перечислены в таблице ниже:
 
-<!-- <style>
-    .collection-method code {
-        font-size: 14px;
-    }
-
-    .collection-method:not(.first-collection-method) {
-        margin-top: 50px;
-    }
-</style> -->
-
-<div id="docs-column-list" markdown="1">
+<div class="docs-column-list" markdown="1">
 
 - [bigIncrements](#column-method-bigIncrements)
 - [bigInteger](#column-method-bigInteger)
@@ -841,7 +831,7 @@ $table->nullableUlidMorphs('taggable');
     $table->tinyInteger('votes');
 
 <a name="column-method-tinyText"></a>
-#### `tinyText()` {#collection-method}
+#### `tinyText()`
 
 Метод `tinyText` создаёт эквивалент столбца `TINYTEXT`:
 

@@ -415,7 +415,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 Противоположным для метода `contains`, является метод [`doesntContain`](#method-doesntcontain).
 
 <a name="method-containsoneitem"></a>
-#### `containsOneItem()` {.collection-method}
+#### `containsOneItem()`
 
 Метод `containsOneItem` определяет, содержит ли коллекция только один элемент:
 
@@ -1740,7 +1740,7 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
     // [1, 2, 3]
 
 <a name="method-pipethrough"></a>
-#### `pipeThrough()` {.collection-method}
+#### `pipeThrough()`
 
 Метод `pipeThrough` передает коллекцию заданному массиву замыканий и возвращает результат выполненных замыканий:
 
@@ -2267,7 +2267,7 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
 
 
 <a name="method-sole"></a>
-#### `sole()` {#collection-method}
+#### `sole()`
 
 Метод `sole` возвращает первый элемент в коллекции, который проходит заданный тест на истинность, но только если тест на истинность соответствует ровно одному элементу:
 
@@ -2487,7 +2487,7 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
 Этот метод имеет ту же сигнатуру, что и метод [`sortKeys`](#method-sortkeys), но отсортирует коллекцию в обратном порядке.
 
 <a name="method-sortkeysusing"></a>
-#### `sortKeysUsing()` {.collection-method}
+#### `sortKeysUsing()`
 
 Метод `sortKeysUsing` сортирует коллекцию по ключам базового ассоциативного массива с помощью обратного вызова:
 
@@ -2760,7 +2760,7 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
 > В отличие от большинства других методов коллекции, `transform` модифицирует коллекцию. Если вы хотите вместо этого создать новую коллекцию, используйте метод [`map`](#method-map).
 
 <a name="method-undot"></a>
-#### `undot()` {.collection-method}
+#### `undot()`
 
 Метод `undot` расширяет одномерную коллекцию, использующую «точечную» нотацию, в многомерную коллекцию:
 

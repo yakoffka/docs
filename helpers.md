@@ -67,16 +67,16 @@ Laravel содержит множество глобальных «вспомо�
 </div>
 
 <a name="numbers-method-list"></a>
-### Numbers
+### Числа
 
 <div class="docs-column-list" markdown="1">
 
-[Number::abbreviate](#method-number-abbreviate)
-[Number::format](#method-number-format)
-[Number::percentage](#method-number-percentage)
-[Number::currency](#method-number-currency)
-[Number::fileSize](#method-number-file-size)
-[Number::forHumans](#method-number-for-humans)
+- [Number::abbreviate](#method-number-abbreviate)
+- [Number::format](#method-number-format)
+- [Number::percentage](#method-number-percentage)
+- [Number::currency](#method-number-currency)
+- [Number::fileSize](#method-number-file-size)
+- [Number::forHumans](#method-number-for-humans)
 
 </div>
 
@@ -111,6 +111,7 @@ Laravel содержит множество глобальных «вспомо�
 - [url](#method-url)
 
 </div>
+
 <a name="miscellaneous-method-list"></a>
 ### Разное
 
@@ -527,7 +528,7 @@ Laravel содержит множество глобальных «вспомо�
     // ['first' => 'James', 'last' => 'Kirk']
 
 <a name="method-array-map-with-keys"></a>
-#### `Arr::mapWithKeys()
+#### `Arr::mapWithKeys()`
 
 
 Метод `Arr::mapWithKeys` проходит по массиву и передает каждое значение указанной функции обратного вызова, которая должна возвращать ассоциативный массив, содержащий одну пару ключ / значение:
