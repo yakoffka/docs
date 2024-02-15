@@ -7,7 +7,7 @@ git: 7eb8b6df95471a64238cb535df75deaaba8e0334
 <a name="introduction"></a>
 ## Введение
 
-[Redis](https://redis.io) – это расширенное хранилище ключ-значение с открытым исходным кодом. Его часто называют сервером структуры данных, поскольку ключи могут содержать [строки](https://redis.io/docs/data-types/strings/), [хеши](https://redis.io/docs/data-types/hashes/), [списки]((https://redis.io/docs/data-types/lists/), [наборы](https://redis.io/docs/data-types/sets/) и [отсортированные наборы](https://redis.io/docs/data-types/sorted-sets/).
+[Redis](https://redis.io) – это расширенное хранилище ключ-значение с открытым исходным кодом. Его часто называют сервером структуры данных, поскольку ключи могут содержать [строки](https://redis.io/docs/data-types/strings/), [хеши](https://redis.io/docs/data-types/hashes/), [списки](https://redis.io/docs/data-types/lists/), [наборы](https://redis.io/docs/data-types/sets/) и [отсортированные наборы](https://redis.io/docs/data-types/sorted-sets/).
 
 Перед использованием Redis с Laravel мы рекомендуем вам установить и использовать расширение [PhpRedis](https://github.com/phpredis/phpredis) PHP через PECL. Расширение сложнее установить по сравнению с пакетами PHP пользовательского слоя, но оно может обеспечить лучшую производительность для приложений, интенсивно использующих Redis. Если вы используете [Laravel Sail](/docs/{{version}}/sail), то это расширение уже установлено в контейнере Docker вашего приложения.
 

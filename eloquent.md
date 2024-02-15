@@ -1360,7 +1360,7 @@ Eloquent также позволяет вам определять глобал�
 <a name="events"></a>
 ## События
 
-[!NOTE]
+> [!NOTE]
 > Хотите транслировать события Eloquent непосредственно в приложение на стороне клиента? Ознакомьтесь с [model event broadcasting] (/docs/{{version}}/broadcasting#model-broadcasting) в Laravel.
 
 Модели Eloquent инициируют некоторые события, что позволяет использовать следующие хуки жизненного цикла модели: `retrieved`, `creating`, `created`, `updating`, `updated`, `saving`, `saved`, `deleting`, `deleted`, `trashed`, `forceDeleting`, `forceDeleted`, `restoring`, `restored` и `replicating`.

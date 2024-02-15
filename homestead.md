@@ -19,6 +19,8 @@ Homestead работает в любой системе Windows, macOS или Li
 <a name="included-software"></a>
 ### Включенное в набор программное обеспечение
 
+<div class="docs-column-list-2" markdown="1">
+
 - Ubuntu 22.04
 - Git
 - PHP 8.3
@@ -49,8 +51,13 @@ Homestead работает в любой системе Windows, macOS или Li
 - XHProf / Tideways / XHGui
 - wp-cli
 
+</div>
+
+
 <a name="optional-software"></a>
 ### Дополнительное программное обеспечение
+
+<div class="docs-column-list" markdown="1">
 
 - Apache
 - Blackfire
@@ -83,6 +90,8 @@ Homestead работает в любой системе Windows, macOS или Li
 - TimescaleDB
 - Trader <small>(PHP extension)</small>
 - Webdriver & Laravel Dusk Utilities
+
+</div>
 
 <a name="installation-and-setup"></a>
 ## Установка и настройка

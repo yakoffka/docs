@@ -18,4 +18,4 @@ mix.js('resources/js/app.js', 'public/js')
 ```
 
 > [!NOTE]
-> В новых установках Laravel, Vite заменил Laravel Mix. Для документации по Mix, пожалуйста, посетите [официальный сайт Laravel Mix](https://laravel-mix.com/). Если вы хотите перейти на Vite, пожалуйста, ознакомьтесь с нашим [руководством по миграции на Vite](https://github.com/laravel/vite-plugin/blob/main/UPGRADE.md#migrating-from-laravel-mix-to-vite).
+> В новых установках Laravel, Vite заменил Laravel Mix. Для просмотра документации по Mix, пожалуйста, посетите [официальный сайт Laravel Mix](https://laravel-mix.com/). Если вы хотите перейти на Vite, пожалуйста, ознакомьтесь с нашим [руководством по миграции на Vite](https://github.com/laravel/vite-plugin/blob/main/UPGRADE.md#migrating-from-laravel-mix-to-vite).

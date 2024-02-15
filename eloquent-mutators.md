@@ -254,7 +254,7 @@ protected function address(): Attribute
         'options' => 'object',
     ]);
 
-> [!Warning]
+> [!WARNING]
 > Атрибуты, которые имеют значение `null`, не будут преобразованы. Кроме того, вы никогда не должны определять типизацию (или атрибут), имя которого совпадает с именем отношения.
 
 <a name="stringable-casting"></a>

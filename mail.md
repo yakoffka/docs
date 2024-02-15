@@ -644,9 +644,6 @@ public function envelope(): Envelope
 
 Если ваше приложение использует Amazon SES для отправки электронных писем, вы должны использовать метод `metadata` для добавления [тегов SES](https://docs.aws.amazon.com/ses/latest/APIReference/API_MessageTag.html) к сообщению.
 
-### Настройка Symfony Message
-
-
 <a name="customizing-the-symfony-message"></a>
 ### Настройка Symfony Message
 
