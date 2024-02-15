@@ -57,7 +57,7 @@ Homestead работает в любой системе Windows, macOS или Li
 <a name="optional-software"></a>
 ### Дополнительное программное обеспечение
 
-<div class="docs-column-list" markdown="1">
+<div class="docs-column-list-2" markdown="1">
 
 - Apache
 - Blackfire
