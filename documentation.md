@@ -1,5 +1,5 @@
 ---
-git: 1d271881a6d72589db2f782bdb1af20bc50a9005
+git: ef9464ab472b14c6298fcde6406fc9435269f597
 ---
 
 - ## Пролог
@@ -99,6 +99,7 @@ git: 1d271881a6d72589db2f782bdb1af20bc50a9005
     - [Pint](/docs/{{version}}/pint)
     - [Precognition](/docs/{{version}}/precognition)
     - [Prompts](/docs/{{version}}/prompts)
+    - [Pulse](/docs/{{version}}/pulse)
     - [Sail](/docs/{{version}}/sail)
     - [Sanctum](/docs/{{version}}/sanctum)
     - [Scout](/docs/{{version}}/scout)
