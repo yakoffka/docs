@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 3be2d18bf5bb509332cf24ddbd828610e793ff94
 ---
 
 # Локализация интерфейса
@@ -235,30 +235,6 @@ public function boot(): void
 
     'apples' => '{0} There are none|{1} There is one|[2,*] There are :count',
 
-<a name="handling-missing-translation-strings"></a>
-### Обработка отсутствующих ключей перевода
-
-Обычно, при попытке перевода строки, для которой нет соответствующего ключа в ваших файлах перевода, Laravel вернет ключ строки перевода.
-
-Вы можете настроить или перехватить это поведение с помощью метода `handleMissingKeysUsing`. Обычно этот метод вызывается в методе `boot` класса `AppServiceProvider` вашего приложения:
-
-```php
-use Illuminate\Support\Facades\Lang;
-
-/**
- * Настройка служб приложения.
- */
-public function boot(): void
-{
-    Lang::handleMissingKeysUsing(function (string $key, array $replacements, string $locale) {
-        info("Обнаружен отсутствующий ключ перевода [$key].");
-
-        return $key;
-    });
-}
-```
-
-Этот подход позволяет вам настроить действие, выполняемое при отсутствии ключей перевода, например, для логирования или другой обработки.
 
 <a name="overriding-package-language-files"></a>
 ## Переопределение языковых файлов пакета
