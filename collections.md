@@ -164,6 +164,7 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 - [`replaceRecursive()`](#method-replacerecursive)
 - [`reverse()`](#method-reverse)
 - [`search()`](#method-search)
+- [select](#method-select)
 - [`shift()`](#method-shift)
 - [`shuffle()`](#method-shuffle)
 - [`skip()`](#method-skip)
