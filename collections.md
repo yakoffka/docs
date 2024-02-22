@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 ---
 
 # Коллекции
@@ -8,7 +8,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 Класс `Illuminate\Support\Collection` обеспечивает гибкую и удобную обертку для работы с массивами данных. Например, посмотрите на следующий код. Здесь мы будем использовать хелпер `collect`, чтобы создать новый экземпляр коллекции из массива, запустим функцию `strtoupper` для каждого элемента, а затем удалим все пустые элементы:
 
-    $collection = collect(['taylor', 'abigail', null])->map(function (string $name) {
+    $collection = collect(['taylor', 'abigail', null])->map(function (?string $name) {
         return strtoupper($name);
     })->reject(function (string $name) {
         return empty($name);
@@ -2113,6 +2113,27 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
     });
 
     // 2
+
+<a name="method-select"></a>
+#### `select()` {.collection-method}
+
+Метод `select` выбирает заданные ключи из коллекции, подобно SQL-оператору `SELECT`:
+
+```php
+$users = collect([
+    ['name' => 'Taylor Otwell', 'role' => 'Developer', 'status' => 'active'],
+    ['name' => 'Victoria Faith', 'role' => 'Researcher', 'status' => 'active'],
+]);
+
+$users->select(['name', 'role']);
+
+/*
+    [
+        ['name' => 'Taylor Otwell', 'role' => 'Developer'],
+        ['name' => 'Victoria Faith', 'role' => 'Researcher'],
+    ],
+*/
+```
 
 <a name="method-shift"></a>
 #### `shift()`

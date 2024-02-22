@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 1aca84db838dd464d45dc0a9689be648cd808a74
 ---
 
 # Глобальные помощники (helpers)
@@ -52,6 +52,7 @@ Laravel содержит множество глобальных «вспомо�
 - [Arr::sortDesc](#method-array-sort-desc)
 - [Arr::sortRecursive](#method-array-sort-recursive)
 - [Arr::sortRecursiveDesc](#method-array-sort-recursive-desc)
+- [Arr::take](#method-array-take)
 - [Arr::toCssClasses](#method-array-to-css-classes)
 - [Arr::toCssStyles](#method-array-to-css-styles)
 - [Arr::undot](#method-array-undot)
@@ -77,6 +78,10 @@ Laravel содержит множество глобальных «вспомо�
 - [Number::currency](#method-number-currency)
 - [Number::fileSize](#method-number-file-size)
 - [Number::forHumans](#method-number-for-humans)
+- [Number::ordinal](#method-number-ordinal)
+- [Number::spell](#method-number-spell)
+- [Number::useLocale](#method-number-use-locale)
+- [Number::withLocale](#method-number-with-locale)
 
 </div>
 
@@ -823,6 +828,27 @@ use Illuminate\Support\Arr;
 
     $sorted = Arr::sortRecursiveDesc($array);
 
+<a name="method-array-take"></a>
+#### `Arr::take()` {.collection-method}
+
+Метод `Arr::take` возвращает новый массив с указанным количеством элементов:
+
+    use Illuminate\Support\Arr;
+
+    $array = [0, 1, 2, 3, 4, 5];
+
+    $chunk = Arr::take($array, 3);
+
+    // [0, 1, 2]
+
+Вы также можете передать отрицательное целое число, чтобы получить указанное количество элементов с конца массива:
+
+    $array = [0, 1, 2, 3, 4, 5];
+
+    $chunk = Arr::take($array, -2);
+
+    // [4, 5]
+
 <a name="method-array-to-css-classes"></a>
 #### `Arr::toCssClasses()` 
 
@@ -847,6 +873,8 @@ use Illuminate\Support\Arr;
 Метод `Arr::toCssStyles` условно компилирует строку стилей CSS. Метод принимает массив классов, где ключ массива содержит класс или классы, которые вы хотите добавить, а значение - логическое выражение. Если элемент массива имеет числовой ключ, он всегда будет включен в список отображаемых классов:
 
 ```php
+use Illuminate\Support\Arr;
+
 $hasColor = true;
 
 $array = ['background-color: blue', 'color: blue' => $hasColor];
@@ -1204,6 +1232,87 @@ use Illuminate\Support\Number;
     $number = Number::forHumans(1230000, precision: 2);
 
     // 1.23 million
+
+<a name="method-number-ordinal"></a>
+#### `Number::ordinal()` {.collection-method}
+
+Метод `Number::ordinal` возвращает порядковое представление числа:
+
+    use Illuminate\Support\Number;
+
+    $number = Number::ordinal(1);
+
+    // 1st
+
+    $number = Number::ordinal(2);
+
+    // 2nd
+
+    $number = Number::ordinal(21);
+
+    // 21st
+
+<a name="method-number-spell"></a>
+#### `Number::spell()` {.collection-method}
+
+Метод `Number::spell` возвращает заданное число прописью:
+
+    use Illuminate\Support\Number;
+
+    $number = Number::spell(102);
+
+    // one hundred and two
+
+    $number = Number::spell(88, locale: 'fr');
+
+    // quatre-vingt-huit
+
+
+Аргумент `after` позволяет указать значение, после которого все числа должны быть прописью:
+
+    $number = Number::spell(10, after: 10);
+
+    // 10
+
+    $number = Number::spell(11, after: 10);
+
+    // eleven
+
+Аргумент `until` позволяет указать значение, до которого все числа должны быть прописью:
+
+    $number = Number::spell(5, until: 10);
+
+    // five
+
+    $number = Number::spell(10, until: 10);
+
+    // 10
+
+<a name="method-number-use-locale"></a>
+#### `Number::useLocale()` {.collection-method}
+
+Метод `Number::useLocale` глобально устанавливает языковой стандарт чисел по умолчанию, что влияет на форматирование чисел и валюты при последующих обращениях к методам класса `Number`:
+
+    use Illuminate\Support\Number;
+
+    /**
+     * Загрузка любых служб пакета.
+     */
+    public function boot(): void
+    {
+        Number::useLocale('de');
+    }
+
+<a name="method-number-with-locale"></a>
+#### `Number::withLocale()` {.collection-method}
+
+Метод `Number::withLocale` выполняет заданное замыкание с использованием указанного языкового стандарта, а затем восстанавливает исходный языковой стандарт после выполнения замыкания:
+
+    use Illuminate\Support\Number;
+
+    $number = Number::withLocale('de', function () {
+        return Number::format(1500);
+    });
 
 <a name="paths"></a>
 ## Пути
