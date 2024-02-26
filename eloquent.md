@@ -1280,7 +1280,7 @@ Eloquent также позволяет вам определять глобал�
          */
         public function scopePopular(Builder $query): void
         {
-            return $query->where('votes', '>', 100);
+            $query->where('votes', '>', 100);
         }
 
         /**
