@@ -1,5 +1,5 @@
 ---
-git: 1aca84db838dd464d45dc0a9689be648cd808a74
+git: e22f2dff94009831d3a078e97143b9c3ed31dc72
 ---
 
 # Глобальные помощники (helpers)
@@ -73,12 +73,13 @@ Laravel содержит множество глобальных «вспомо�
 <div class="docs-column-list" markdown="1">
 
 - [Number::abbreviate](#method-number-abbreviate)
-- [Number::format](#method-number-format)
-- [Number::percentage](#method-number-percentage)
+- [Number::clamp](#method-number-clamp)
 - [Number::currency](#method-number-currency)
 - [Number::fileSize](#method-number-file-size)
 - [Number::forHumans](#method-number-for-humans)
+- [Number::format](#method-number-format)
 - [Number::ordinal](#method-number-ordinal)
+- [Number::percentage](#method-number-percentage)
 - [Number::spell](#method-number-spell)
 - [Number::useLocale](#method-number-use-locale)
 - [Number::withLocale](#method-number-with-locale)
@@ -1130,51 +1131,28 @@ $classes = Arr::toCssStyles($array);
 
     // 1.23M
 
-<a name="method-number-format"></a>
-#### `Number::format()`
+<a name="method-number-clamp"></a>
+#### `Number::clamp()` {.collection-method}
 
-Метод `Number::format` форматирует предоставленное число в строку с учетом локализации:
-
-use Illuminate\Support\Number;
-
-    $number = Number::format(100000);
-
-    // 100,000
-
-    $number = Number::format(100000, precision: 2);
-
-    // 100,000.00
-
-    $number = Number::format(100000.123, maxPrecision: 2);
-
-    // 100,000.12
-
-    $number = Number::format(100000, locale: 'de');
-
-    // 100.000
-
-<a name="method-number-percentage"></a>
-#### `Number::percentage()`
-
-Метод `Number::percentage` возвращает процентное представление указанного значения в виде строки:
+Метод `Number::clamp` гарантирует, что заданное число останется в заданном диапазоне. Если число меньше минимума, возвращается минимальное значение. Если число больше максимума, возвращается максимальное значение:
 
     use Illuminate\Support\Number;
 
-    $percentage = Number::percentage(10);
+    $number = Number::clamp(105, min: 10, max: 100);
 
-    // 10%
+    // 100
 
-    $percentage = Number::percentage(10, precision: 2);
+    $number = Number::clamp(5, min: 10, max: 100);
 
-    // 10.00%
+    // 10
 
-    $percentage = Number::percentage(10.123, maxPrecision: 2);
+    $number = Number::clamp(10, min: 10, max: 100);
 
-    // 10.12%
+    // 10
 
-    $percentage = Number::percentage(10, precision: 2, locale: 'de');
+    $number = Number::clamp(20, min: 10, max: 100);
 
-    // 10,00%
+    // 20
 
 <a name="method-number-currency"></a>
 #### `Number::currency()`
@@ -1233,6 +1211,29 @@ use Illuminate\Support\Number;
 
     // 1.23 million
 
+<a name="method-number-format"></a>
+#### `Number::format()`
+
+Метод `Number::format` форматирует предоставленное число в строку с учетом локализации:
+
+use Illuminate\Support\Number;
+
+    $number = Number::format(100000);
+
+    // 100,000
+
+    $number = Number::format(100000, precision: 2);
+
+    // 100,000.00
+
+    $number = Number::format(100000.123, maxPrecision: 2);
+
+    // 100,000.12
+
+    $number = Number::format(100000, locale: 'de');
+
+    // 100.000
+
 <a name="method-number-ordinal"></a>
 #### `Number::ordinal()` {.collection-method}
 
@@ -1251,6 +1252,29 @@ use Illuminate\Support\Number;
     $number = Number::ordinal(21);
 
     // 21st
+
+<a name="method-number-percentage"></a>
+#### `Number::percentage()`
+
+Метод `Number::percentage` возвращает процентное представление указанного значения в виде строки:
+
+    use Illuminate\Support\Number;
+
+    $percentage = Number::percentage(10);
+
+    // 10%
+
+    $percentage = Number::percentage(10, precision: 2);
+
+    // 10.00%
+
+    $percentage = Number::percentage(10.123, maxPrecision: 2);
+
+    // 10.12%
+
+    $percentage = Number::percentage(10, precision: 2, locale: 'de');
+
+    // 10,00%
 
 <a name="method-number-spell"></a>
 #### `Number::spell()` {.collection-method}
