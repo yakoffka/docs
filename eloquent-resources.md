@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 49850a762cbc73d08e51c26d736f2f5b7e11625d
 ---
 
 # Eloquent · Ресурсы API (Resource)
@@ -326,24 +326,6 @@ php artisan make:resource UserCollection
     ]
 }
 ```
-
-Если вы хотите использовать собственный ключ вместо `data`, вы можете определить свойство `$wrap` в классе ресурса:
-
-    <?php
-
-    namespace App\Http\Resources;
-
-    use Illuminate\Http\Resources\Json\JsonResource;
-
-    class UserResource extends JsonResource
-    {
-        /**
-         * Обертка «данных», которую следует применить.
-         *
-         * @var string|null
-         */
-        public static $wrap = 'user';
-    }
 
 Если вы хотите отключить обертывание самого верхнего ресурса, то вы должны вызвать метод `withoutWrapping` базового класса `Illuminate\Http\Resources\Json\JsonResource`. Обычно вы должны вызывать этот метод из вашего `AppServiceProvider` или другого [сервис-провайдера](/docs/{{version}}/providers):
 

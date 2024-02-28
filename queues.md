@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: e20d02d996858ce94542311bb21c8f302775a307
 ---
 
 # Очереди
@@ -1217,7 +1217,9 @@ php artisan migrate
         new ImportCsv(201, 300),
         new ImportCsv(301, 400),
         new ImportCsv(401, 500),
-    ])->progress(function (Batch $batch) {
+    ])->before(function (Batch $batch) {
+        // Пакет заданий создан, но не добавлено ни одно задание ...
+    })->progress(function (Batch $batch) {
         // Одна задача успешно завершена ...
     })->then(function (Batch $batch) {
         // Все задания успешно завершены ...
@@ -1627,6 +1629,17 @@ php artisan queue:work --max-time=3600
 
 ```shell
 php artisan queue:work --sleep=3
+```
+
+<a name="maintenance-mode-queues"></a>
+#### Режим обслуживания и очереди
+
+Пока ваше приложение находится в [режиме обслуживания](/docs/{{version}}/configuration#maintenance-mode), задания, поставленные в очередь, не будут обрабатываться. После выхода приложения из режима обслуживания задания будут обрабатываться в обычном режиме.
+
+Чтобы обрабатывать задания в очереди, даже если включён режим обслуживания, вы можете использовать опцию `--force`:
+
+```shell
+php artisan queue:work --force
 ```
 
 <a name="resource-considerations"></a>

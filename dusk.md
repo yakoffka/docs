@@ -1,5 +1,5 @@
 ---
-git: c7f1d2092cc8878ee36eabce7bfd72f86da6d287
+git: 3117bb2fcdf53b685e55fc976d47f84da53d464c
 ---
 
 # Laravel Dusk
@@ -738,6 +738,8 @@ Dusk также предоставляет метод `withKeyboard`, котор
 
     $browser->doubleClick();
 
+    $browser->doubleClick('.selector');
+
 Метод `rightClick` используется для имитации щелчка правой кнопкой мыши:
 
     $browser->rightClick();
@@ -746,6 +748,8 @@ Dusk также предоставляет метод `withKeyboard`, котор
 
 Метод `clickAndHold` используется для имитации нажатия и удержания кнопки мыши. Последующий вызов метода `releaseMouse` отменяет это поведение и отпускает кнопку мыши:
 
+    $browser->clickAndHold('.selector');
+
     $browser->clickAndHold()
             ->pause(1000)
             ->releaseMouse();
@@ -753,6 +757,8 @@ Dusk также предоставляет метод `withKeyboard`, котор
 Метод `controlClick` может быть использован для симуляции события `ctrl+click` в браузере:
 
     $browser->controlClick();
+
+    $browser->controlClick('.selector');
 
 <a name="mouseover"></a>
 #### Наведение мыши
