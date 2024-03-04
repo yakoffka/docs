@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 1b9e3ad8f3b48165037da201a5c7f15e3c349a4b
 ---
 
 # Ограничение скорости
@@ -66,23 +66,27 @@ $executed = RateLimiter::attempt(
         return 'Too many attempts!';
     }
 
-    RateLimiter::hit('send-message:'.$user->id);
+    RateLimiter::increment('send-message:'.$user->id);
 
     // Send message...
 
-В качестве альтернативы вы можете использовать метод `remaining` для получения количества попыток, оставшихся для данного ключа. Если для данного ключа остались повторные попытки, вы можете вызвать метод `hit`, чтобы увеличить общее количество попыток:
+В качестве альтернативы вы можете использовать метод `remaining` для получения количества попыток, оставшихся для данного ключа. Если для данного ключа остались повторные попытки, вы можете вызвать метод `increment`, чтобы увеличить общее количество попыток:
 
     use Illuminate\Support\Facades\RateLimiter;
 
     if (RateLimiter::remaining('send-message:'.$user->id, $perMinute = 5)) {
-        RateLimiter::hit('send-message:'.$user->id);
+        RateLimiter::increment('send-message:'.$user->id);
 
         // Send message...
     }
 
-    RateLimiter::hit('send-message:'.$user->id);
+    RateLimiter::increment('send-message:'.$user->id);
 
     // Send message...
+
+Если вы хотите увеличить значение для определенного ключа более чем на единицу, вы можете указать желаемое число для метода `increment`:
+
+    RateLimiter::increment('send-message:'.$user->id, amount: 5);
 
 <a name="determining-limiter-availability"></a>
 #### Определение доступности ограничителя скорости
@@ -96,6 +100,10 @@ $executed = RateLimiter::attempt(
 
         return 'You may try again in '.$seconds.' seconds.';
     }
+
+    RateLimiter::increment('send-message:'.$user->id);
+
+    // Send message...
 
 <a name="clearing-attempts"></a>
 ### Очистка счетчика попыток
