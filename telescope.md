@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: f38db859448073e894edb4824f0874064e8f7bbe
 ---
 
 # Пакет Laravel Telescope
@@ -28,6 +28,8 @@ php artisan telescope:install
 
 php artisan migrate
 ```
+
+Наконец, вы можете получить доступ к панели Telescope через маршрут `/telescope`.
 
 <a name="migration-customization"></a>
 #### Настройка миграции
