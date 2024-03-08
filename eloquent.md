@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 678fa19281215a24e7692a68cc3779ea2a0419bc
 ---
 
 # Eloquent · Начало работы
@@ -1187,7 +1187,22 @@ php artisan make:scope AncientScope
 <a name="applying-global-scopes"></a>
 #### Применение глобальных диапазонов
 
-Чтобы назначить глобальный диапазон модели, вы должны переопределить метод модели `booted` и вызвать метод модели `addGlobalScope`. Метод `addGlobalScope` принимает экземпляр вашего диапазона как единственный аргумент:
+Чтобы назначить глобальный диапазон, вы можете просто добавить атрибут ScopedBy к модели.
+
+    <?php
+
+    namespace App\Models;
+
+    use App\Models\Scopes\AncientScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+
+    #[ScopedBy([AncientScope::class])]
+    class User extends Model
+    {
+        //
+    }
+
+Или же, вы можете вручную зарегистрировать глобальный диапазон, переопределив метод `booted` и вызвать метод модели `addGlobalScope`. Метод `addGlobalScope` принимает экземпляр вашего диапазона как единственный аргумент:
 
     <?php
 
@@ -1493,34 +1508,30 @@ php artisan make:observer UserObserver --model=User
         }
     }
 
-Чтобы зарегистрировать наблюдателя, вам нужно вызвать метод `observe` наблюдаемой модели. Вы можете зарегистрировать наблюдателей в методе `boot` поставщика служб вашего приложения `App\Providers\EventServiceProvider`:
+Для регистрации наблюдателя вы можете просто добавить атрибут `ObservedBy` к соответствующей модели:
+
+    use App\Observers\UserObserver;
+    use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+    #[ObservedBy([UserObserver::class])]
+    class User extends Authenticatable
+    {
+        //
+    }
+
+
+Или же, вы можете вручную зарегистрировать наблюдателя, вызвав метод `observe` модели, которую вы хотите наблюдать. Вы можете зарегистрировать наблюдателей в методе `boot` сервис-провайдера `App\Providers\EventServiceProvider` вашего приложения:
 
     use App\Models\User;
     use App\Observers\UserObserver;
 
     /**
-     * Зарегистрировать любые события приложения.
+     * Register any events for your application.
      */
     public function boot(): void
     {
         User::observe(UserObserver::class);
     }
-
-
-Альтернативно, вы можете перечислить ваши наблюдатели в свойстве `$observers` класса `App\Providers\EventServiceProvider` вашего приложения:
-
-
-    use App\Models\User;
-    use App\Observers\UserObserver;
-
-    /**
-     * Наблюдатели моделей для вашего приложения.
-     *
-     * @var array
-     */
-    protected $observers = [
-        User::class => [UserObserver::class],
-    ];
 
 > [!NOTE]
 > Существуют дополнительные события, которые может прослушивать наблюдатель, такие как `saving` и `retrieved`. Эти события описаны в документации [events](#events).

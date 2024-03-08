@@ -1,5 +1,5 @@
 ---
-git: d550c75b56fe72277b9a35f3daa4ba3f194af1cb
+git: ce23398eb35d1857f884899882177af4ab11fc5e
 ---
 
 # Строки
@@ -544,6 +544,10 @@ Laravel включает в себя различные функции для р
     $isUrl = Str::isUrl('laravel');
 
     // false
+
+Метод `isUrl` считает широкий спектр протоколов допустимыми. Тем не менее, вы можете указать протоколы, которые должны считаться допустимыми, передав их методу `isUrl`:
+
+    $isUrl = Str::isUrl('http://example.com', ['http', 'https']);
 
 <a name="method-str-is-ulid"></a>
 #### `Str::isUlid()` 
@@ -1737,6 +1741,10 @@ Str::wordCount('Hello, world!'); // 2
     $result = Str::of('Taylor')->isUrl();
 
     // false
+
+Метод `isUrl` считает широкий спектр протоколов допустимыми. Тем не менее, вы можете указать протоколы, которые должны считаться допустимыми, передав их методу `isUrl`:
+
+    $result = Str::of('http://example.com')->isUrl(['http', 'https']);
 
 <a name="method-fluent-str-is-uuid"></a>
 #### `isUuid` 
