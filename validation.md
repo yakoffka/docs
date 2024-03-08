@@ -1,5 +1,5 @@
 ---
-git: 01022bfaf930303cb15c61985cd00f18d3caa113
+git: 8f995824d69bfeded20ea9c50288935f9eee8b0b
 ---
 
 # Валидация
@@ -1205,6 +1205,28 @@ The credit card number field is required when payment type is credit card.
     $request->validate([
         'status' => [Rule::enum(ServerStatus::class)],
     ]);
+
+Методы `only` и `except` правила `Enum` могут использоваться для ограничения того, какие значения перечисления должны считаться допустимыми:
+
+    Rule::enum(ServerStatus::class)
+        ->only([ServerStatus::Pending, ServerStatus::Active]);
+
+    Rule::enum(ServerStatus::class)
+        ->except([ServerStatus::Pending, ServerStatus::Active]);
+
+Метод `when` может использоваться для условного изменения правила `Enum`:
+
+```php
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+
+Rule::enum(ServerStatus::class)
+    ->when(
+        Auth::user()->isAdmin(),
+        fn ($rule) => $rule->only(...),
+        fn ($rule) => $rule->only(...),
+    );
+```
 
 <a name="rule-exclude"></a>
 #### exclude
