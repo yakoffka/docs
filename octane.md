@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: d8352cb5e592f101ee1357acf5277ad8169bb960
 ---
 
 # Laravel Octane
@@ -63,7 +63,63 @@ services:
   laravel.test:
     environment:
       SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --server=frankenphp --host=0.0.0.0 --admin-port=2019 --port=80" # [tl! add]
+      XDG_CONFIG_HOME:  /var/www/html/config # [tl! add]
+      XDG_DATA_HOME:  /var/www/html/data # [tl! add]
 ```
+
+Чтобы включить поддержку HTTPS, HTTP/2 и HTTP/3, выполните следующие изменения:
+
+```yaml
+services:
+    laravel.test:
+        ports:
+            - '${APP_PORT:-80}:80'
+            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+            - '443:443' # [tl! add]
+            - '443:443/udp' # [tl! add]
+        environment:
+            SUPERVISOR_PHP_COMMAND: "/usr/bin/php -d variables_order=EGPCS /var/www/html/artisan octane:start --host=localhost --port=443 --admin-port=2019 --https" # [tl! add]
+            XDG_CONFIG_HOME:  /var/www/html/config # [tl! add]
+            XDG_DATA_HOME:  /var/www/html/data # [tl! add]
+```
+
+Обычно следует получать доступ к вашему приложению через `https://localhost`, так как использование `https://127.0.0.1` требует дополнительной конфигурации и не рекомендуется.
+
+<a name="frankenphp-via-docker"></a>
+#### FrankenPHP через Docker
+
+Использование официальных образов Docker от FrankenPHP может улучшить производительность и добавить поддержку дополнительных расширений, которые не включены в статические установки FrankenPHP. Кроме того, официальные образы Docker позволяют запускать FrankenPHP на платформах, которые не поддерживаются нативно, таких как Windows. Официальные образы Docker FrankenPHP подходят как для локальной разработки, так и для использования в продакшн.
+
+Вы можете использовать следующий Dockerfile для создания контейнера вашего Laravel-приложения на базе FrankenPHP:
+
+```dockerfile
+FROM dunglas/frankenphp
+
+RUN install-php-extensions \
+    pcntl
+    # Добавьте здесь другие PHP-расширения...
+
+COPY . /app
+
+ENTRYPOINT ["php", "artisan", "octane:frankenphp"]
+```
+
+Во время разработки вы можете использовать следующий файл Docker Compose для запуска вашего приложения:
+
+```yaml
+# compose.yaml
+services:
+  frankenphp:
+    build:
+      context: .
+    entrypoint: php artisan octane:frankenphp --max-requests=1
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+```
+
+Дополнительную информацию о запуске FrankenPHP с Docker можно найти в [официальной документации FrankenPHP](https://frankenphp.dev/docs/docker/).
 
 <a name="roadrunner"></a>
 ### RoadRunner
