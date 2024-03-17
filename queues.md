@@ -1,5 +1,5 @@
 ---
-git: e20d02d996858ce94542311bb21c8f302775a307
+git: 215d89e5b96604f5c1ae6f22d46df693d76c0b55
 ---
 
 # Очереди
@@ -1849,7 +1849,7 @@ php artisan queue:work redis --tries=3 --backoff=3
         /**
          * Обработать провал задания.
          */
-        public function failed(Throwable $exception): void
+        public function failed(?Throwable $exception): void
         {
             // Отправляем пользователю уведомление об ошибке и т.д.
         }
