@@ -1,5 +1,5 @@
 ---
-git: 8155f824bef698e679307e52751ec004abd78c47
+git: 08354a737e77855609585f72f9e5373f55539394
 ---
 
 # Установка
@@ -45,7 +45,7 @@ Laravel объединяет лучшие пакеты в экосистеме P
 После установки PHP и Composer вы можете создать новый проект Laravel с помощью команды `create-project` от Composer:
 
 ```shell
-composer create-project laravel/laravel example-app
+composer create-project laravel/laravel:^10.0 example-app
 ```
 
 Или вы можете создавать новые проекты Laravel, установив глобально [Laravel installer](https://github.com/laravel/installer) via Composer:
