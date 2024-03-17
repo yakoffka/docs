@@ -1,5 +1,5 @@
 ---
-git: db600493ef8063ade845515d9c88a830905e9861
+git: 6f7d982efaa532a3b9d24181b66a7020f63aa8af
 ---
 
 # Конфигурирование
@@ -194,13 +194,6 @@ php artisan env:decrypt --force
 
     config(['app.timezone' => 'America/Chicago']);
 
-Для помощи в статическом анализе фасад `Config` также предоставляет методы извлечения типизированной конфигурации. Если полученное значение конфигурации не соответствует ожидаемому типу, будет сгенерировано исключение:
-
-    Config::string('config-key');
-    Config::integer('config-key');
-    Config::float('config-key');
-    Config::boolean('config-key');
-    Config::array('config-key');
 
 <a name="configuration-caching"></a>
 ## Кеширование конфигурации
