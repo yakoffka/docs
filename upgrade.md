@@ -1,5 +1,5 @@
 ---
-git: eb80ae09e91fa364dc1719f928a47a7a1ec36212
+git: a5311a99723c410153f2c8c1b8a3eb2644165a12
 ---
 
 # Руководство по обновлению
@@ -80,6 +80,7 @@ Laravel теперь требует Composer 2.2.0 или выше.
 - `doctrine/dbal` до `^3.0`
 - `spatie/laravel-ignition` до `^2.0`
 - `laravel/passport` до `^11.0` ([Руководство по обновлению](https://github.com/laravel/passport/blob/11.x/UPGRADE.md))
+- `laravel/ui` to `^4.0`
 
 <!-- </div> -->
 
