@@ -1,5 +1,5 @@
 ---
-git: c8e8814a45cef619c37bb118c895d94fc1347919
+git: 0261344e430a8c8c061848c1b8b262e011b9cd0e
 ---
 
 # Построитель запросов
@@ -351,6 +351,25 @@ DB::table('users')->where('active', false)
                 $join->on('users.id', '=', 'latest_posts.user_id');
             })->get();
 
+<a name="lateral-joins"></a>
+#### Боковые соединения (Lateral Joins)
+
+> [!WARNING]  
+> Боковые соединения в настоящее время поддерживаются PostgreSQL, MySQL >= 8.0.14 и SQL Server. Вы можете использовать методы `joinLateral` и `leftJoinLateral` для выполнения "бокового соединения" с подзапросом. Каждый из этих методов принимает два аргумента: подзапрос и его псевдоним таблицы. Условие(я) соединения должно быть указано в `where` выражении данного подзапроса. Боковые соединения оцениваются для каждой строки и могут ссылаться на столбцы вне подзапроса.
+
+В этом примере мы получим коллекцию пользователей, а также три последних блог-поста пользователя. Для каждого пользователя может быть до трех строк в наборе результатов: по одной для каждого из его последних блог-постов. Условие соединения указывается с помощью `whereColumn` выражения внутри подзапроса, ссылаясь на текущую строку пользователя:
+
+    $latestPosts = DB::table('posts')
+                       ->select('id as post_id', 'title as post_title', 'created_at as post_created_at')
+                       ->whereColumn('user_id', 'users.id')
+                       ->orderBy('created_at', 'desc')
+                       ->limit(3);
+
+    $users = DB::table('users')
+                ->joinLateral($latestPosts, 'latest_posts')
+                ->get();
+
+
 <a name="unions"></a>
 ## Объединения результатов Unions
 
@@ -453,6 +472,54 @@ $products = DB::table('products')
             ->orWhere('price', '<', 10);
     })
     ->get();
+```
+
+
+<a name="where-any-all-clauses"></a>
+### Выражения Where Any / All
+
+Иногда вам может понадобиться применить одни и те же условия к нескольким столбцам запроса. Например, вы можете хотеть выбрать все записи, где хотя бы один столбец из списка соответствует определенному значению. Это можно сделать с помощью метода `whereAny`:
+
+    $users = DB::table('users')
+                ->where('active', true)
+                ->whereAny([
+                    'name',
+                    'email',
+                    'phone',
+                ], 'LIKE', 'Example%')
+                ->get();
+
+Запрос выше приведет к следующему SQL:
+
+```sql
+SELECT *
+FROM users
+WHERE active = true AND (
+    name LIKE 'Example%' OR
+    email LIKE 'Example%' OR
+    phone LIKE 'Example%'
+)
+```
+
+Аналогично метод `whereAll` может быть использован для извлечения записей, где все указанные столбцы соответствуют заданному условию:
+
+    $posts = DB::table('posts')
+                ->where('published', true)
+                ->whereAll([
+                    'title',
+                    'content',
+                ], 'LIKE', '%Laravel%')
+                ->get();
+
+Запрос выше приведет к следующему SQL:
+
+```sql
+SELECT *
+FROM posts
+WHERE published = true AND (
+    title LIKE '%Laravel%' AND
+    content LIKE '%Laravel%'
+)
 ```
 
 <a name="json-where-clauses"></a>
