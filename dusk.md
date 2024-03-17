@@ -1,5 +1,5 @@
 ---
-git: 3117bb2fcdf53b685e55fc976d47f84da53d464c
+git: 656ba39a0393052cf70cefb8412c2063fc99852f
 ---
 
 # Laravel Dusk
@@ -210,7 +210,7 @@ php artisan dusk
 php artisan dusk:fails
 ```
 
-Команда `dusk` принимает любой аргумент, который обычно принимается тестером PHPUnit, например, позволяет вам запускать тесты только для указанной [группы](https://phpunit.readthedocs.io/en/10.1/annotations.html#group):
+Команда `dusk` принимает любой аргумент, который обычно принимается тестером PHPUnit, например, позволяет вам запускать тесты только для указанной [группы](https://docs.phpunit.de/en/10.5/annotations.html#group):
 
 ```shell
 php artisan dusk --group=foo
