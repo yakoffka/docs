@@ -1,5 +1,5 @@
 ---
-git: ce23398eb35d1857f884899882177af4ab11fc5e
+git: fdeb961799b9969361bc41525cfacfa6f685b533
 ---
 
 # Строки
@@ -480,6 +480,22 @@ Laravel включает в себя различные функции для р
     $html = Str::inlineMarkdown('**Laravel**');
 
     // <strong>Laravel</strong>
+
+#### Безопасность в Markdown
+
+По умолчанию Markdown позволяет использовать HTML, что может привести к уязвимостям XSS (межсайтовый скриптинг), если использовать его с необработанным пользовательским вводом.
+Согласно [документации по безопасности CommonMark](https://commonmark.thephpleague.com/security/), вы можете использовать опцию `html_input` для экранирования или удаления сырого HTML, а также опцию `allow_unsafe_links` для указания разрешения на небезопасные ссылки.
+Если вам нужно разрешить некоторый сырой HTML, следует пропустить скомпилированный Markdown через сторонние библиотеки, такие как HTML Purifier:
+
+    use Illuminate\Support\Str;
+
+    Str::inlineMarkdown('Inject: <script>alert("Hello XSS!");</script>', [
+        'html_input' => 'strip',
+        'allow_unsafe_links' => false,
+    ]);
+
+    // Inject: alert(&quot;Hello XSS!&quot;);
+
 
 <a name="method-str-is"></a>
 #### `Str::is()` 
