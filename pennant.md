@@ -1,5 +1,5 @@
 ---
-git: 6ce1b7642303fc22b7aad6f71f576912ca391b32
+git: ce8eb815edf2b9ee3529c9ee1f6a5a2ca9600fbf
 ---
 
 
@@ -780,12 +780,25 @@ Feature::purge(['new-api', 'purchase-button']);
 Feature::purge();
 ```
 
-Поскольку очистка функций может быть полезной частью конвейера развертывания вашего приложения, Pennant включает команду Artisan `pennant:purge`:
+Поскольку очищение функций может быть полезным в рамках процесса развёртывания вашего приложения, в Pennant имеется команда Artisan `pennant:purge`, которая будет удалять предоставленные функции из хранилища:
 
 ```sh
 php artisan pennant:purge new-api
 
 php artisan pennant:purge new-api purchase-button
+```
+
+Также можно очистить все функции _за исключением_ тех, что перечислены в определенном списке функций. Например, предположим, что вы хотите удалить все функции, кроме значений для "new-api" и "purchase-button", сохраненных в хранилище. Для этого передайте имена этих функций в опцию `--except`:
+
+```sh
+php artisan pennant:purge --except=new-api --except=purchase-button
+```
+
+Кроме того, для удобства команда `pennant:purge` также поддерживает флаг `--except-registered`.
+Этот флаг указывает, что нужно удалить все функции, кроме тех, которые явно зарегистрированы в сервис провайдере:
+
+```sh
+php artisan pennant:purge --except-registered
 ```
 
 <a name="testing"></a>
