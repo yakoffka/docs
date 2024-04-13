@@ -1,5 +1,5 @@
 ---
-git: 7eb8b6df95471a64238cb535df75deaaba8e0334
+git: 478c8a3d66ffa31118831bfd3365db9fa0e2baa4
 ---
 
 # База данных · Использование Redis
@@ -14,7 +14,7 @@ git: 7eb8b6df95471a64238cb535df75deaaba8e0334
 Если вы не можете установить расширение PhpRedis, то установите пакет `predis/predis` через Composer. Predis – это клиент Redis, полностью написанный на PHP и не требующий дополнительных расширений:
 
 ```shell
-composer require predis/predis
+composer require predis/predis:^2.0
 ```
 
 <a name="configuration"></a>
@@ -26,18 +26,27 @@ composer require predis/predis
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
+        'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+        ],
+
         'default' => [
+            'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', 6379),
-            'database' => env('REDIS_DB', 0),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_DB', '0'),
         ],
 
         'cache' => [
+            'url' => env('REDIS_URL'),
             'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
             'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', 6379),
-            'database' => env('REDIS_CACHE_DB', 1),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_CACHE_DB', '1'),
         ],
 
     ],
@@ -47,6 +56,11 @@ composer require predis/predis
     'redis' => [
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
+
+        'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+        ],
 
         'default' => [
             'url' => 'tcp://127.0.0.1:6379?database=0',
@@ -63,18 +77,14 @@ composer require predis/predis
 
 По умолчанию клиенты Redis будут использовать схему `tcp` при подключении к вашим серверам Redis; однако вы можете использовать шифрование TLS / SSL, указав параметр `scheme` конфигурации в массиве конфигурации вашего сервера Redis:
 
-    'redis' => [
-
-        'client' => env('REDIS_CLIENT', 'phpredis'),
-
-        'default' => [
-            'scheme' => 'tls',
-            'host' => env('REDIS_HOST', '127.0.0.1'),
-            'password' => env('REDIS_PASSWORD'),
-            'port' => env('REDIS_PORT', 6379),
-            'database' => env('REDIS_DB', 0),
-        ],
-
+    'default' => [
+        'scheme' => 'tls',
+        'url' => env('REDIS_URL'),
+        'host' => env('REDIS_HOST', '127.0.0.1'),
+        'username' => env('REDIS_USERNAME'),
+        'password' => env('REDIS_PASSWORD'),
+        'port' => env('REDIS_PORT', '6379'),
+        'database' => env('REDIS_DB', '0'),
     ],
 
 <a name="clusters"></a>
@@ -86,35 +96,43 @@ composer require predis/predis
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
+        'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
+        ],
+
         'clusters' => [
             'default' => [
                 [
-                    'host' => env('REDIS_HOST', 'localhost'),
+                    'url' => env('REDIS_URL'),
+                    'host' => env('REDIS_HOST', '127.0.0.1'),
+                    'username' => env('REDIS_USERNAME'),
                     'password' => env('REDIS_PASSWORD'),
-                    'port' => env('REDIS_PORT', 6379),
-                    'database' => 0,
+                    'port' => env('REDIS_PORT', '6379'),
+                    'database' => env('REDIS_DB', '0'),
                 ],
             ],
         ],
 
+        // ...
     ],
 
-По умолчанию кластеры будут выполнять сегментирование на стороне клиента между вашими узлами, что позволяет объединять узлы в пул и создавать большой объем доступной оперативной памяти. Однако сегментирование на стороне клиента не обрабатывает отказоустойчивость; поэтому оно в первую очередь подходит для переходных кешированных данных, доступных из другого первичного хранилища данных.
 
-Если вы хотите использовать собственную кластеризацию Redis вместо сегментирования на стороне клиента, то вы можете указать это, установив значение конфигурации `options.cluster` на `redis` в конфигурационном файле `config/database.php` вашего приложения:
+По умолчанию Laravel будет использовать встроенное кластерирование Redis, так как значение конфигурации `options.cluster` установлено на `redis`. Кластеризация Redis - отличный вариант по умолчанию, так как она гармонично обрабатывает аварийные ситуации.
+
+Laravel также поддерживает клиентское разделение данных (sharding). Однако клиентское разделение данных не обрабатывает аварийные ситуации, поэтому оно в основном подходит для временных кешированных данных, доступных из другого основного хранилища данных.
+
+Если вы хотите использовать клиентское разделение данных вместо встроенной кластеризации Redis, вы можете удалить значение конфигурации `options.cluster` в файле конфигурации вашего приложения `config/database.php`:
 
     'redis' => [
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
-        'options' => [
-            'cluster' => env('REDIS_CLUSTER', 'redis'),
-        ],
-
         'clusters' => [
             // ...
         ],
 
+        // ...
     ],
 
 <a name="predis"></a>
@@ -129,26 +147,18 @@ composer require predis/predis
         // ...
     ],
 
-Помимо основных параметров конфигурации сервера `host`, `port`, `database`, и `password`, Predis поддерживает дополнительные [параметры подключения](https://github.com/nrk/predis/wiki/Connection-Parameters), которые могут быть определены для каждого из ваших серверов Redis. Чтобы использовать эти дополнительные параметры конфигурации, добавьте их в конфигурацию сервера Redis в конфигурационном файле `config/database.php` вашего приложения:
+Помимо параметров конфигурации по умолчанию, Predis поддерживает дополнительные [параметры подключения](https://github.com/nrk/predis/wiki/Connection-Parameters), которые могут быть определены для каждого из ваших серверов Redis. Чтобы использовать эти дополнительные параметры конфигурации, добавьте их в конфигурацию вашего сервера Redis в файле конфигурации вашего приложения `config/database.php`:
 
     'default' => [
-        'host' => env('REDIS_HOST', 'localhost'),
+        'url' => env('REDIS_URL'),
+        'host' => env('REDIS_HOST', '127.0.0.1'),
+        'username' => env('REDIS_USERNAME'),
         'password' => env('REDIS_PASSWORD'),
-        'port' => env('REDIS_PORT', 6379),
-        'database' => 0,
+        'port' => env('REDIS_PORT', '6379'),
+        'database' => env('REDIS_DB', '0'),
         'read_write_timeout' => 60,
     ],
 
-<a name="the-redis-facade-alias"></a>
-#### Псевдоним фасада Redis
-
-Конфигурационный файл `config/app.php` в Laravel содержит массив `aliases`, который определяет все псевдонимы классов, которые будут зарегистрированы фреймворком. По умолчанию в него не включается псевдоним `Redis`, чтобы избежать конфликта с именем класса `Redis`, предоставляемым расширением PhpRedis. Если вы используете клиент Predis и хотите добавить псевдоним `Redis`, вы можете добавить его в массив `aliases` в конфигурационном файле `config/app.php` вашего приложения:
-
-```php
-'aliases' => Facade::defaultAliases()->merge([
-    'Redis' => Illuminate\Support\Facades\Redis::class,
-])->toArray(),
-```
 
 <a name="phpredis"></a>
 ### PhpRedis
@@ -159,16 +169,18 @@ composer require predis/predis
 
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
-        // Остальная часть конфигурации Redis ...
+        // ...
     ],
 
-Помимо основных параметров конфигурации сервера `scheme`, `host`, `port`, `database`, и `password`, PhpRedis поддерживает дополнительные параметры подключения: `name`, `persistent`, `persistent_id`, `prefix`, `read_timeout`, `retry_interval`, `timeout`, и `context`. Чтобы использовать эти дополнительные параметры конфигурации, добавьте их в конфигурацию сервера Redis в конфигурационном файле `config/database.php` вашего приложения:
+Помимо параметров конфигурации по умолчанию, PhpRedis поддерживает следующие дополнительные параметры подключения: `name`, `persistent`, `persistent_id`, `prefix`, `read_timeout`, `retry_interval`, `timeout` и `context`. Вы можете добавить любой из этих параметров в конфигурацию вашего сервера Redis в файле конфигурации вашего приложения `config/database.php`:
 
     'default' => [
-        'host' => env('REDIS_HOST', 'localhost'),
+        'url' => env('REDIS_URL'),
+        'host' => env('REDIS_HOST', '127.0.0.1'),
+        'username' => env('REDIS_USERNAME'),
         'password' => env('REDIS_PASSWORD'),
-        'port' => env('REDIS_PORT', 6379),
-        'database' => 0,
+        'port' => env('REDIS_PORT', '6379'),
+        'database' => env('REDIS_DB', '0'),
         'read_timeout' => 60,
         'context' => [
             // 'auth' => ['username', 'secret'],
@@ -186,11 +198,13 @@ composer require predis/predis
         'client' => env('REDIS_CLIENT', 'phpredis'),
 
         'options' => [
+            'cluster' => env('REDIS_CLUSTER', 'redis'),
+            'prefix' => env('REDIS_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_database_'),
             'serializer' => Redis::SERIALIZER_MSGPACK,
             'compression' => Redis::COMPRESSION_LZ4,
         ],
 
-        // Rest of Redis configuration...
+        // ...
     ],
 
 В настоящее время поддерживаются следующие сериализаторы: `Redis::SERIALIZER_NONE` (default), `Redis::SERIALIZER_PHP`, `Redis::SERIALIZER_JSON`, `Redis::SERIALIZER_IGBINARY`, и `Redis::SERIALIZER_MSGPACK`.
