@@ -1,5 +1,5 @@
 ---
-git: 0261344e430a8c8c061848c1b8b262e011b9cd0e
+git: 39cbb5dee15de938f269a674de650119be653806
 ---
 
 # Построитель запросов
@@ -525,7 +525,7 @@ WHERE published = true AND (
 <a name="json-where-clauses"></a>
 ### Выражения Where и JSON
 
-Laravel также поддерживает запросы к типам столбцов JSON в базах данных, которые предоставляют поддержку для типов столбцов JSON. В настоящее время это включает MySQL 5.7+, PostgreSQL, SQL Server 2016 и SQLite 3.39.0 (с расширением [JSON1](https://www.sqlite.org/json1.html)). Для выполнения запроса к столбцу JSON используйте оператор `->`:
+Laravel также поддерживает запросы к типам столбцов JSON в базах данных, которые предоставляют поддержку для типов столбцов JSON. В настоящее время это включает MySQL 8.0+, PostgreSQL 12.0+, SQL Server 2017+ и SQLite 3.39.0 (с расширением [JSON1](https://www.sqlite.org/json1.html)). Для выполнения запроса к столбцу JSON используйте оператор `->`:
 
     $users = DB::table('users')
                     ->where('preferences->dining->meal', 'salad')
