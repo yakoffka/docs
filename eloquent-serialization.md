@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 298272be28936d28da4c800ff6b519a05f0cf687
 ---
 
 # Eloquent · Сериализация
@@ -201,7 +201,10 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 Вы можете настроить формат сериализации отдельных атрибутов даты, указав формат даты при [объявлении типизации](/docs/{{version}}/eloquent-mutators#attribute-casting) модели:
 
-    protected $casts = [
-        'birthday' => 'date:Y-m-d',
-        'joined_at' => 'datetime:Y-m-d H:00',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'birthday' => 'date:Y-m-d',
+            'joined_at' => 'datetime:Y-m-d H:00',
+        ];
+    }
