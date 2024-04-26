@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: d5d1f85fff1a3e500eef3cad5abae497d260ff21
 ---
 
 # Laravel Horizon
@@ -405,15 +405,12 @@ Horizon позволяет назначать “теги” (tags) задани
 <a name="metrics"></a>
 ## Метрики
 
-Horizon включает панель показателей, которая предоставляет информацию о времени ожидания и пропускной способности вашего задания и очереди. Чтобы заполнить эту информационную панель, вы должны настроить Artisan-команду Horizon `snapshot` на запуск каждые пять минут через [планировщик (scheduler)](/docs/{{version}}/scheduling) вашего приложения:
+Horizon включает в себя панель метрик, которая предоставляет информацию о времени ожидания задач и очереди, а также пропускной способности. Чтобы записывать информацию в эту панель, вы должны настроить Artisan-команду Horizon `snapshot` для выполнения каждые пять минут в файле `routes/console.php` вашего приложения:
 
-    /**
-     * Определение расписания для команд.
-     */
-    protected function schedule(Schedule $schedule): void
-    {
-        $schedule->command('horizon:snapshot')->everyFiveMinutes();
-    }
+
+    use Illuminate\Support\Facades\Schedule;
+
+    Schedule::command('horizon:snapshot')->everyFiveMinutes();
 
 <a name="deleting-failed-jobs"></a>
 ## Удаление невыполненных заданий
