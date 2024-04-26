@@ -1,5 +1,5 @@
 ---
-git: d6605b0162301072ea404cac9eff166d068455dc
+git: f34f0297ec86e214f39e9034bfedae47609a4fe6
 ---
 
 # Фасады (Facades)
@@ -66,21 +66,37 @@ git: d6605b0162301072ea404cac9eff166d068455dc
 
 Используя методы тестирования фасадов Laravel, мы можем написать следующий тест, чтобы проверить, что метод `Cache::get` был вызван с ожидаемым аргументом:
 
-    use Illuminate\Support\Facades\Cache;
+```php tab=Pest
+use Illuminate\Support\Facades\Cache;
+ 
+test('basic example', function () {
+    Cache::shouldReceive('get')
+         ->with('key')
+         ->andReturn('value');
+ 
+    $response = $this->get('/cache');
+ 
+    $response->assertSee('value');
+});
+```
 
-    /**
-     * Отвлеченный пример функционального теста.
-     */
-    public function test_basic_example(): void
-    {
-        Cache::shouldReceive('get')
-             ->with('key')
-             ->andReturn('value');
+```php tab=PHPUnit
+use Illuminate\Support\Facades\Cache;
 
-        $response = $this->get('/cache');
+/**
+ * A basic functional test example.
+ */
+public function test_basic_example(): void
+{
+    Cache::shouldReceive('get')
+         ->with('key')
+         ->andReturn('value');
 
-        $response->assertSee('value');
-    }
+    $response = $this->get('/cache');
+
+    $response->assertSee('value');
+}
+```
 
 <a name="facades-vs-helper-functions"></a>
 ### Фасады против глобальных помощников
@@ -215,31 +231,51 @@ git: d6605b0162301072ea404cac9eff166d068455dc
 
 Когда используется фасад реального времени, реализация издателя будет получена из контейнера службы с использованием той части интерфейса или имени класса, которая расположена после префикса `Facades`. При тестировании мы можем использовать встроенные в Laravel помощники для тестирования фасадов, чтобы имитировать вызов этого метода:
 
-    <?php
+```php tab=Pest
+<?php
+ 
+use App\Models\Podcast;
+use Facades\App\Contracts\Publisher;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+ 
+uses(RefreshDatabase::class);
+ 
+test('podcast can be published', function () {
+    $podcast = Podcast::factory()->create();
+ 
+    Publisher::shouldReceive('publish')->once()->with($podcast);
+ 
+    $podcast->publish();
+});
+```
 
-    namespace Tests\Feature;
+```php tab=PHPUnit
+<?php
 
-    use App\Models\Podcast;
-    use Facades\App\Contracts\Publisher;
-    use Illuminate\Foundation\Testing\RefreshDatabase;
-    use Tests\TestCase;
+namespace Tests\Feature;
 
-    class PodcastTest extends TestCase
+use App\Models\Podcast;
+use Facades\App\Contracts\Publisher;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class PodcastTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * A test example.
+     */
+    public function test_podcast_can_be_published(): void
     {
-        use RefreshDatabase;
+        $podcast = Podcast::factory()->create();
 
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_podcast_can_be_published(): void
-        {
-            $podcast = Podcast::factory()->create();
+        Publisher::shouldReceive('publish')->once()->with($podcast);
 
-            Publisher::shouldReceive('publish')->once()->with($podcast);
-
-            $podcast->publish();
-        }
+        $podcast->publish();
     }
+}
+```
 
 <a name="facade-class-reference"></a>
 ## Справочник фасадов
