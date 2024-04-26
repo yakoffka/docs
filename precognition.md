@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 83a06597e819dcd360cfd3c6d968400978e5af15
 ---
 
 # Precognition
@@ -678,7 +678,20 @@ class InteractionMiddleware
 
 Кроме того, если вы хотите проверить, что предвиденный запрос был успешным, например, не возвращал никаких ошибок валидации, вы можете использовать метод `assertSuccessfulPrecognition` на ответе:
 
-```php
+```php tab=Pest
+it('validates registration form with precognition', function () {
+    $response = $this->withPrecognition()
+        ->post('/register', [
+            'name' => 'Taylor Otwell',
+        ]);
+
+    $response->assertSuccessfulPrecognition();
+
+    expect(User::count())->toBe(0);
+});
+```
+
+```php tab=PHPUnit
 public function test_it_validates_registration_form_with_precognition()
 {
     $response = $this->withPrecognition()
