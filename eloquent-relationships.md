@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 944c218697c1fc71a852e64076093b48719a73a5
 ---
 
 # Eloquent · Отношения
@@ -1703,9 +1703,6 @@ select * from authors where id in (1, 2, 3, 4, 5, ...)
     $users = User::with(['posts' => function (Builder $query) {
         $query->orderBy('created_at', 'desc');
     }])->get();
-
-> [!WARNING]
-> Методы `limit` и` take` построителя запросов нельзя использовать при ограничении жадной загрузки.
 
 <a name="constraining-eager-loading-of-morph-to-relationships"></a>
 #### Ограничение жадной загрузки отношений Morph To
