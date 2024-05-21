@@ -1,5 +1,5 @@
 ---
-git: 83a06597e819dcd360cfd3c6d968400978e5af15
+git: 0dd21627d08a2bc060714f86c308f1c6e284b0de
 ---
 
 # Precognition
@@ -623,7 +623,7 @@ protected function rules()
         'avatar' => [
             ...$this->isPrecognitive() ? [] : ['required'],
             'image',
-            'mimes:jpg,png'
+            'mimes:jpg,png',
             'dimensions:ratio=3/2',
         ],
         // ...
