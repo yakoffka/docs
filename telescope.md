@@ -1,5 +1,5 @@
 ---
-git: f38db859448073e894edb4824f0874064e8f7bbe
+git: bc56f6d5ad4a2d76cad5429426cb294b055b165d
 ---
 
 # Пакет Laravel Telescope
@@ -21,7 +21,7 @@ git: f38db859448073e894edb4824f0874064e8f7bbe
 composer require laravel/telescope
 ```
 
-После установки Telescope опубликуйте его ресурсы с помощью команды `telescope:install` Artisan. После установки Telescope вы также должны запустить команду `migrate`, чтобы создать таблицы, необходимые для хранения данных Telescope:
+После установки Telescope опубликуйте его ресурсы и миграции с помощью команды `telescope:install` Artisan. После установки Telescope вы также должны запустить команду `migrate`, чтобы создать таблицы, необходимые для хранения данных Telescope:
 
 ```shell
 php artisan telescope:install
@@ -30,11 +30,6 @@ php artisan migrate
 ```
 
 Наконец, вы можете получить доступ к панели Telescope через маршрут `/telescope`.
-
-<a name="migration-customization"></a>
-#### Настройка миграции
-
-Если вы не собираетесь использовать миграции Telescope по умолчанию, то вам следует вызвать метод `Telescope::ignoreMigrations` в методе `register` класса `App\Providers\AppServiceProvider` вашего приложения. Вы можете экспортировать миграции по умолчанию, используя следующую команду: `php artisan vendor:publish --tag=telescope-migrations`.
 
 <a name="local-only-installation"></a>
 ### Только локальная установка
@@ -49,7 +44,7 @@ php artisan telescope:install
 php artisan migrate
 ```
 
-После запуска `telescope:install` вы должны удалить регистрацию поставщика `TelescopeServiceProvider` из файла конфигурации `config/app.php` вашего приложения. Вместо этого самостоятельно зарегистрируйте поставщика службы Telescope в методе `register` вашего класса `App\Providers\AppServiceProvider`. Прежде чем зарегистрировать поставщика, убедитесь, что текущее окружение является локальным:
+После запуска `telescope:install` вы должны удалить регистрацию поставщика `TelescopeServiceProvider` из файла конфигурации `bootstrap/providers.php` вашего приложения. Вместо этого самостоятельно зарегистрируйте поставщика службы Telescope в методе `register` вашего класса `App\Providers\AppServiceProvider`. Прежде чем зарегистрировать поставщика, убедитесь, что текущее окружение является локальным:
 
     /**
      * Регистрация любых служб приложения.
@@ -88,11 +83,15 @@ php artisan migrate
 
 Если не применять очистку, то таблица `telescope_entries` может очень быстро накапливать записи. Чтобы избежать этого, вы должны [запланировать](/docs/{{version}}/scheduling) ежедневный запуск команды `telescope:prune` Artisan:
 
-    $schedule->command('telescope:prune')->daily();
+    use Illuminate\Support\Facades\Schedule;
+
+    Schedule::command('telescope:prune')->daily();
 
 По умолчанию все записи старше 24 часов будут удалены. Вы можете использовать параметр `hours` при вызове команды, чтобы определить, как долго хранить данные Telescope. Например, следующая команда удалит все записи, созданные более 48 часов назад:
 
-    $schedule->command('telescope:prune --hours=48')->daily();
+    use Illuminate\Support\Facades\Schedule;
+
+    Schedule::command('telescope:prune --hours=48')->daily();
 
 <a name="dashboard-authorization"></a>
 ### Авторизация в панели управления
