@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: bf02092cfb84070be58f97ffa9a5de61fac531b9
 ---
 
 # Eloquent: Фабрики (Factory)
@@ -13,11 +13,20 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
     namespace Database\Factories;
 
-    use Illuminate\Support\Str;
     use Illuminate\Database\Eloquent\Factories\Factory;
+    use Illuminate\Support\Facades\Hash;
+    use Illuminate\Support\Str;
 
+    /**
+     * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+     */
     class UserFactory extends Factory
     {
+        /**
+         * The current password being used by the factory.
+         */
+        protected static ?string $password;
+
         /**
          * Define the model's default state.
          *
@@ -29,9 +38,19 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
                 'name' => fake()->name(),
                 'email' => fake()->unique()->safeEmail(),
                 'email_verified_at' => now(),
-                'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+                'password' => static::$password ??= Hash::make('password'),
                 'remember_token' => Str::random(10),
             ];
+        }
+
+        /**
+         * Indicate that the model's email address should be unverified.
+         */
+        public function unverified(): static
+        {
+            return $this->state(fn (array $attributes) => [
+                'email_verified_at' => null,
+            ]);
         }
     }
 Как видите, фабрики – это классы, которые расширяют базовый класс фабрики Laravel и определяют метод `definition`. Метод `definition` возвращает набор значений атрибутов по умолчанию, которые должны применяться при создании модели с использованием фабрики.
@@ -39,7 +58,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 С помощью помощник `fake` фабрики имеют доступ к библиотеке PHP [Faker](https://github.com/FakerPHP/Faker), которая позволяет удобно генерировать различные виды случайных данных для тестирования и заполнения базы данных.
 
 > [!NOTE]  
-> Вы можете установить языковой стандарт Faker для своего приложения, добавив опцию `faker_locale` в конфигурационном файле `config/app.php`.
+> Вы можете изменить языковой стандарт Faker для своего приложения, обновив параметр `faker_locale` в файле конфигурации `config/app.php`.
 
 <a name="defining-model-factories"></a>
 ## Определение фабрик моделей
