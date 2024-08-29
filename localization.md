@@ -1,5 +1,5 @@
 ---
-git: f0773b3bea1d60f156f20a1a5dcf7327de711435
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Локализация интерфейса
@@ -85,9 +85,9 @@ use Illuminate\Support\Pluralizer;
  */
 public function boot(): void
 {
-    Pluralizer::useLanguage('spanish');     
+    Pluralizer::useLanguage('spanish');
 
-    // ...     
+    // ...
 }
 ```
 
