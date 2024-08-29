@@ -1,5 +1,5 @@
 ---
-git: 5aebf54d1c9e4d8e53f093617243ff9c4cd30ec2
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Eloquent · Коллекции
