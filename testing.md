@@ -1,5 +1,5 @@
 ---
-git: 69ff2b4f453fb01fc422513a9d6bc60a73fc816b
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Тестирование · Начало работы
@@ -77,7 +77,7 @@ php artisan make:test UserTest --unit --pest
         }
     }
 
-> [!WARNING]  
+> [!WARNING]
 > Если вы определяете свои собственные методы `setUp` / `tearDown` в тестовом классе, обязательно вызывайте соответствующие методы `parent::setUp()` / `parent::tearDown()` родительского класса. Обычно вы должны вызывать `parent::setUp()` в начале своего собственного метода `setUp`, а `parent::tearDown()` в конце вашего метода `tearDown`.
 
 <a name="running-tests"></a>
