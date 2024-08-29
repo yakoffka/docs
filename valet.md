@@ -1,5 +1,5 @@
 ---
-git: f42fff8056e34fad51df3f54869cf7327a175190
+git: 87c1dc3bbb78949d35a1af957ba76c4469490baa
 ---
 # Laravel Valet
 
