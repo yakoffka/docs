@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # База данных · Наполнение фиктивными данными
@@ -136,7 +136,7 @@ php artisan db:seed --class=UserSeeder
 Вы также можете заполнить свою базу данных, используя команду `migrate:fresh` в сочетании с опцией `--seed`, которая удалит все таблицы и перезапустит все миграции. Эта команда полезна для полной перестройки вашей базы данных. Опцию `--seeder` можно использовать для указания конкретного сида (seeder) для выполнения:
 
 ```shell
-php artisan migrate:fresh --seed --seeder=UserSeeder 
+php artisan migrate:fresh --seed --seeder=UserSeeder
 ```
 
 <a name="forcing-seeding-production"></a>
