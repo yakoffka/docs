@@ -1,5 +1,5 @@
 ---
-git: 83761449ff271ccda95e4ea87eca0f5a772f59df
+git: 9e4a5cc9a717a811ba72830108c546dfefe8ffb4
 ---
 
 # Процессы
@@ -7,7 +7,7 @@ git: 83761449ff271ccda95e4ea87eca0f5a772f59df
 <a name="introduction"></a>
 ## Введение
 
-Laravel предоставляет выразительное, минималистичное API вокруг [компонента Symfony Process](https://symfony.ru/doc/current/components/process.html), что позволяет вам удобно вызывать внешние процессы из вашего приложения Laravel. Возможности работы с процессами в Laravel сосредоточены на наиболее распространенных сценариях использования, обеспечивая отличный опыт разработчика.
+Laravel предоставляет выразительное, минималистичное API вокруг [компонента Symfony Process](https://symfony.ru/doc/7.0/components/process.html), что позволяет вам удобно вызывать внешние процессы из вашего приложения Laravel. Возможности работы с процессами в Laravel сосредоточены на наиболее распространенных сценариях использования, обеспечивая отличный опыт разработчика.
 
 <a name="invoking-processes"></a>
 ## Вызов процессов
@@ -376,7 +376,31 @@ Route::get('/import', function () {
 ```
 
 При тестировании этого маршрута мы можем указать Laravel вернуть поддельный успешный результат для каждого вызванного процесса, вызвав метод `fake` на фасаде `Process` без аргументов. Кроме того, мы даже можем [проверить](#available-assertions), что определенный процесс был "запущен":
-```php
+
+```php tab=Pest
+<?php
+
+use Illuminate\Process\PendingProcess;
+use Illuminate\Contracts\Process\ProcessResult;
+use Illuminate\Support\Facades\Process;
+
+test('process is invoked', function () {
+    Process::fake();
+
+    $response = $this->get('/import');
+
+    // Simple process assertion...
+    Process::assertRan('bash import.sh');
+
+    // Or, inspecting the process configuration...
+    Process::assertRan(function (PendingProcess $process, ProcessResult $result) {
+        return $process->command === 'bash import.sh' &&
+               $process->timeout === 60;
+    });
+});
+```
+
+```php tab=PHPUnit
 <?php
 
 namespace Tests\Feature;
