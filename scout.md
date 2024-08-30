@@ -1,5 +1,5 @@
 ---
-git: 8dacb4ca63361ccb80fb45e1c482d1fee39ecebd
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Laravel Scout
@@ -574,6 +574,10 @@ php artisan scout:flush "App\Models\Post"
 Или, если у вас уже есть коллекция Eloquent, вы можете вызвать метод `unsearchable` для коллекции, чтобы удалить экземпляры моделей из индекса:
 
     $orders->unsearchable();
+
+Чтобы удалить все записи модели из соответствующего индекса, вы можете вызвать метод `removeAllFromSearch`:
+
+    Order::removeAllFromSearch();
 
 <a name="pausing-indexing"></a>
 ### Приостановка индексации
