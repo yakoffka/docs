@@ -523,7 +523,6 @@ form.setValidationTimeout(3000);
 > [!ПРЕДУПРЕЖДЕНИЕ]  
 > Входное значение формы будет отображаться как валидное или валидное только после того, как оно изменится, и будет получен ответ на валидацию.
 
-As we have seen, you can hook into an input's `change` event and validate individual inputs as the user interacts with them; however, you may need to validate inputs that the user has not yet interacted with. This is common when building a "wizard", where you want to validate all visible inputs, whether the user has interacted with them or not, before moving to the next step.
 Как мы видели, вы можете подключиться к событию ввода `change` и проверять отдельные входные данные по мере взаимодействия с ними пользователя; однако вам может потребоваться проверить входные данные, с которыми пользователь еще не взаимодействовал. Это часто встречается при создании «мастера», когда вы хотите проверить все видимые входные данные, независимо от того, взаимодействовал ли с ними пользователь или нет, прежде чем перейти к следующему шагу.
 
 Чтобы сделать это с помощью Precognition, вам следует пометить поля, которые вы хотите проверить, как «затронутые», передав их имена методу `touch`. Затем вызовите метод `validate` с обратными вызовами `onSuccess` или `onValidationError`:
