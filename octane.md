@@ -1,5 +1,5 @@
 ---
-git: d8352cb5e592f101ee1357acf5277ad8169bb960
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Laravel Octane
@@ -33,10 +33,7 @@ php artisan octane:install
 <a name="frankenphp"></a>
 ### FrankenPHP
 
-> [!WARNING]
-> Интеграция Octane c FrankenPHP находится в бета-версии и должна использоваться с осторожностью в продакшене.
-
-[FrankenPHP](https://frankenphp.dev) - это сервер приложений PHP, написанный на Go, который поддерживает современные веб-функции, такие как ранние подсказки и сжатие Zstandard. Когда вы устанавливаете Octane и выбираете FrankenPHP в качестве сервера, Octane автоматически загрузит и установит для вас бинарный файл FrankenPHP.
+[FrankenPHP](https://frankenphp.dev) — это сервер приложений PHP, написанный на Go, который поддерживает современные веб-функции, такие как ранние подсказки, Brotli и сжатие Zstandard. Когда вы устанавливаете Octane и выбираете FrankenPHP в качестве сервера, Octane автоматически загрузит и установит для вас двоичный файл FrankenPHP.
 
 <a name="frankenphp-via-laravel-sail"></a>
 
@@ -112,7 +109,7 @@ services:
   frankenphp:
     build:
       context: .
-    entrypoint: php artisan octane:frankenphp --max-requests=1
+    entrypoint: php artisan octane:frankenphp --workers=1 --max-requests=1
     ports:
       - "8000:8000"
     volumes:
@@ -134,7 +131,7 @@ services:
 ```shell
 ./vendor/bin/sail up
 
-./vendor/bin/sail composer require laravel/octane spiral/roadrunner-cli spiral/roadrunner-http 
+./vendor/bin/sail composer require laravel/octane spiral/roadrunner-cli spiral/roadrunner-http
 ```
 
 Затем вы должны запустить оболочку Sail и использовать исполняемый файл `rr` для получения последней сборки двоичного файла RoadRunner на основе Linux:
