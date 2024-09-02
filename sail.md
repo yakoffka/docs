@@ -1,5 +1,5 @@
 ---
-git: 43fc2028a539845fa2921e4cedcba8d57d46e69b
+git: 736c61401b4dbcdad73362c66a906aaef4c0c158
 ---
 
 # Laravel Sail
@@ -60,6 +60,19 @@ php artisan sail:add
 ```shell
 php artisan sail:install --devcontainer
 ```  
+
+<a name="rebuilding-sail-images"></a>
+### Пересборка образов Sail
+
+Иногда вам может потребоваться полностью пересобрать образы Sail, чтобы убедиться, что все пакеты и программное обеспечение образа обновлены. Вы можете сделать это с помощью команды `build`:
+
+```shell
+docker compose down -v
+
+sail build --no-cache
+
+sail up
+```
 
 <a name="configuring-a-shell-alias"></a>
 ### Настройка Shell-псевдонимов
@@ -138,7 +151,7 @@ sail php script.php
 <a name="executing-composer-commands"></a>
 ### Выполнение Composer команд
 
-Команды Composer могут быть выполнены с помощью команды `composer`. Контейнер приложения Laravel Sail содержит Composer 2.x:
+Команды Composer могут быть выполнены с помощью команды `composer`. Контейнер приложения Laravel Sail содержит Composer:
 
 ```nothing
 sail composer require laravel/sanctum
@@ -212,7 +225,7 @@ sail yarn
 <a name="meilisearch"></a>
 ### Meilisearch
 
-Если вы выбрали установку службы [Meilisearch](https://www.meilisearch.com) при установке Sail, файл `docker-compose.yml` вашего приложения будет содержать контейнер этой мощной поисковой системы, которая [совместима](https://github.com/meilisearch/meilisearch-laravel-scout) с помощью [Laravel Scout](/docs/{{version}}/scout). После того как вы запустили свои контейнеры, вы можете подключиться к экземпляру MeiliSearch в своем приложении, установив для переменной среды `MEILISEARCH_HOST` значение `http://meilisearch:7700`.
+Если вы решили установить службу [Meilisearch](https://www.meilisearch.com) при установке Sail, файл `docker-compose.yml` вашего приложения будет содержать запись для этой мощной поисковой системы, интегрированной с [Laravel Scout](/docs/{{version}}/scout). После запуска контейнеров вы можете подключиться к экземпляру Meilisearch в вашем приложении, установив для переменной среды `MEILISEARCH_HOST` значение `http://meilisearch:7700`.
 
 Со своего локального компьютера вы можете получить доступ к веб-панели администрирования Meilisearch, перейдя по адресу `http://localhost:7700` в своем браузере.
 
@@ -263,7 +276,7 @@ AWS_URL=http://localhost:9000/local
 <a name="running-tests"></a>
 ## Тестирование
 
-Laravel обеспечивает отличную поддержку тестирования прямо из коробки, и вы можете использовать команду Sail `test` для запуска [функциональных и модульных тестов](/docs/{{version}}/testing). Любые параметры, которые принимает PHPUnit, также могут быть переданы команде `test`:
+Laravel обеспечивает отличную поддержку тестирования прямо из коробки, и вы можете использовать команду Sail `test` для запуска [функциональных и модульных тестов](/docs/{{version}}/testing). Любые параметры, которые принимает Pest / PHPUnit, также могут быть переданы команде `test`:
 
 ```shell
 sail test
@@ -383,7 +396,7 @@ context: ./vendor/laravel/sail/runtimes/8.0
 Кроме того, вы можете захотеть обновить имя `image`, чтобы оно отражало версию PHP, используемую приложением. Этот параметр также определен в файле `docker-compose.yml` приложения:
 
 ```yaml
-image: sail-8.1/app
+image: sail-8.2/app
 ```
 После обновления файла `docker-compose.yml` вашего приложения вы должны обновить образы контейнеров:
 
@@ -422,14 +435,11 @@ sail up
 sail share
 ```
 
-При совместном использовании сайта с помощью команды `share` вы должны настроить доверенные прокси вашего приложения в посреднике (middleware) `TrustProxies`. В противном случае вспомогательные средства генерации URL, такие, как `url` и `route`, не смогут определить правильный HTTP-хост, который следует использовать во время генерации URL:
+При совместном использовании сайта с помощью команды `share` вам следует настроить доверенные прокси-серверы вашего приложения, используя метод посредника `TrustProxies` в файле `bootstrap/app.php` вашего приложения. В противном случае помощники создания URL-адресов, такие как `url` и `route`, не смогут определить правильный HTTP-хост, который следует использовать во время создания URL-адреса:
 
-    /**
-     * Доверенные прокси для приложения.
-     *
-     * @var array|string|null
-     */
-    protected $proxies = '*';
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+    })
 
 Если вы хотите выбрать поддомен для вашего общего сайта, вы можете указать параметр `subdomain` при выполнении команды `share`:
 
