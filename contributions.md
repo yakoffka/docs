@@ -1,5 +1,5 @@
 ---
-git: a2cf776692b78089c6e06464fd2bcfad31604f85
+git: 197edc3fb93b922e3adb5a90dc7d018716d08dd0
 ---
 
 # Рекомендации по участию
@@ -29,20 +29,20 @@ git: a2cf776692b78089c6e06464fd2bcfad31604f85
 - [Пакет Laravel Envoy](https://github.com/laravel/envoy)
 - [Пакет Laravel Folio](https://github.com/laravel/folio)
 - [Фреймворк Laravel](https://github.com/laravel/framework)
-- [Пакет Laravel Homestead](https://github.com/laravel/homestead)
-- [Скрипты для сборки Laravel Homestead](https://github.com/laravel/settler)
+- [Пакет Laravel Homestead](https://github.com/laravel/homestead) ([Скрипты для сборки](https://github.com/laravel/settler))
 - [Пакет Laravel Horizon](https://github.com/laravel/horizon)
 - [Пакет Laravel Jetstream](https://github.com/laravel/jetstream)
 - [Пакет Laravel Passport](https://github.com/laravel/passport)
 - [Пакет Laravel Pennant](https://github.com/laravel/pennant)
 - [Пакет Laravel Pint](https://github.com/laravel/pint)
 - [Пакет Laravel Prompts](https://github.com/laravel/prompts)
+- [Пакет Laravel Reverb](https://github.com/laravel/reverb)
 - [Пакет Laravel Sail](https://github.com/laravel/sail)
 - [Пакет Laravel Sanctum](https://github.com/laravel/sanctum)
 - [Пакет Laravel Scout](https://github.com/laravel/scout)
 - [Пакет Laravel Socialite](https://github.com/laravel/socialite)
 - [Пакет Laravel Telescope](https://github.com/laravel/telescope)
-- [Исходники официального сайта Laravel](https://github.com/laravel/laravel.com-next)
+- [Исходники официального сайта Laravel](https://github.com/laravel/laravel.com)
 
 <!-- </div> -->
 
@@ -75,7 +75,7 @@ git: a2cf776692b78089c6e06464fd2bcfad31604f85
 
 **Все** исправления ошибок должны быть отправлены в последнюю версию, которая поддерживает исправления ошибок (на данный момент `10.x`). Исправления ошибок **никогда** не должны отправляться в ветку `master`, если они не исправляют функции, которые существуют только в предстоящем выпуске.
 
-**Минорный** функционал, **полностью обратно совместимый** с текущим релизом, может быть отправлен в последнюю стабильную ветку (в настоящее время `10.x`)..
+**Минорный** функционал, **полностью обратно совместимый** с текущим релизом, может быть отправлен в последнюю стабильную ветку (в настоящее время `11.x`)..
 
 **Мажорный** новый функционал или функционал с изменениями, приводящими к нарушению обратной совместимости, должен всегда отправляться в ветку `master`, содержащую предстоящий релиз.
 
