@@ -1,5 +1,5 @@
 ---
-git: 49850a762cbc73d08e51c26d736f2f5b7e11625d
+git: 3a2fa3ea59532f3239ae737ae78d0ffd1922c4c8
 ---
 
 # Eloquent · Ресурсы API (Resource)
