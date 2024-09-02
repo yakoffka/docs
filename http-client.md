@@ -1,5 +1,5 @@
 ---
-git: eedba9693ce2420b39de657edac6570e9eed2823
+git: 6441ead7d4b19a8c39576b9f8e52452f7b075b64
 ---
 
 # HTTP-клиент
@@ -8,12 +8,6 @@ git: eedba9693ce2420b39de657edac6570e9eed2823
 ## Введение
 
 Laravel предлагает минимальный и выразительный API для HTTP-клиента [Guzzle](http://docs.guzzlephp.org/en/stable/), позволяющий быстро выполнять исходящие запросы для взаимодействия с другими веб-приложениями. Обертка вокруг Guzzle ориентирована на наиболее распространенные варианты использования и дает прекрасные возможности для разработчиков.
-
-Вы должны убедиться, что пакет Guzzle включен в зависимости вашего приложения. По умолчанию Laravel автоматически включает эту зависимость. Однако, если вы ранее удалили пакет, то вы можете установить его снова через Composer:
-
-```shell
-composer require guzzlehttp/guzzle
-```
 
 <a name="making-requests"></a>
 ## Выполнение запросов
@@ -27,9 +21,10 @@ composer require guzzlehttp/guzzle
 Метод `get` возвращает экземпляр `Illuminate\Http\Client\Response`, содержащий методы, которые можно использовать для получения информации об ответе:
 
     $response->body() : string;
-    $response->json($key = null, $default = null) : array|mixed;
+    $response->json($key = null, $default = null) : mixed;
     $response->object() : object;
     $response->collect($key = null) : Illuminate\Support\Collection;
+    $response->resource() : resource;
     $response->status() : int;
     $response->ok() : bool;
     $response->successful() : bool;
@@ -72,7 +67,7 @@ HTTP-клиент также позволяет вам формировать UR
 Http::withUrlParameters([
     'endpoint' => 'https://laravel.com',
     'page' => 'docs',
-    'version' => '9.x',
+    'version' => '11.x',
     'topic' => 'validation',
 ])->get('{+endpoint}/{page}/{version}/{topic}');
 ```
@@ -380,11 +375,30 @@ Http::globalResponseMiddleware(fn ($response) => $response->withHeader(
 <a name="guzzle-options"></a>
 ### Параметры Guzzle
 
-Вы можете указать дополнительные [параметры запроса для Guzzle](http://docs.guzzlephp.org/en/stable/request-options.html), используя метод `withOptions`. Метод `withOptions` принимает массив пар ключ / значение:
+Вы можете указать дополнительные [параметры запроса Guzzle](http://docs.guzzlephp.org/en/stable/request-options.html) для исходящего запроса, используя метод `withOptions`. Метод `withOptions` принимает массив пар ключ/значение:
 
     $response = Http::withOptions([
         'debug' => true,
     ])->get('http://example.com/users');
+
+<a name="global-options"></a>
+#### Глобальные параметры
+
+Чтобы настроить параметры по умолчанию для каждого исходящего запроса, вы можете использовать метод `globalOptions`. Обычно этот метод следует вызывать из метода `boot` `AppServiceProvider` вашего приложения:
+
+```php
+use Illuminate\Support\Facades\Http;
+
+/**
+ * Bootstrap any application services.
+ */
+public function boot(): void
+{
+    Http::globalOptions([
+        'allow_redirects' => false,
+    ]);
+}
+```
 
 <a name="concurrent-requests"></a>
 ## Параллельные запросы
@@ -662,21 +676,17 @@ $recorded = Http::recorded(function (Request $request, Response $response) {
 
 Laravel запускает три события в процессе отправки HTTP-запросов. Событие `RequestSending` запускается до отправки запроса, а событие `ResponseReceived` запускается после получения ответа на данный запрос. Событие `ConnectionFailed` запускается, если на данный запрос ответ не получен.
 
-События `RequestSending` и `ConnectionFailed` содержат общедоступное свойство `$request`, которое вы можете использовать для проверки экземпляра `Illuminate\Http\Client\Request`. Аналогично, событие `ResponseReceived` содержит свойство `$request`, а также свойство `$response`, которое может использоваться для проверки экземпляра `Illuminate\Http\Client\Response`. Вы можете зарегистрировать прослушиватели событий для этого события в вашем сервис-провайдере `App\Providers\EventServiceProvider`:
+События `RequestSending` и `ConnectionFailed` содержат общедоступное свойство `$request`, которое вы можете использовать для проверки экземпляра `Illuminate\Http\Client\Request`. Аналогично, событие `ResponseReceived` содержит свойство `$request`, а также свойство `$response`, которое можно использовать для проверки экземпляра `Illuminate\Http\Client\Response`. Вы можете создать [прослушиватели событий](/docs/{{version}}/events) для этих событий в вашем приложении:
 
-    /**
-     * Сопоставления прослушивателей событий для приложения.
-     *
-     * @var array
-     */
-    protected $listen = [
-        'Illuminate\Http\Client\Events\RequestSending' => [
-            'App\Listeners\LogRequestSending',
-        ],
-        'Illuminate\Http\Client\Events\ResponseReceived' => [
-            'App\Listeners\LogResponseReceived',
-        ],
-        'Illuminate\Http\Client\Events\ConnectionFailed' => [
-            'App\Listeners\LogConnectionFailed',
-        ],
-    ];
+    use Illuminate\Http\Client\Events\RequestSending;
+
+    class LogRequest
+    {
+        /**
+         * Handle the given event.
+         */
+        public function handle(RequestSending $event): void
+        {
+            // $event->request ...
+        }
+    }
