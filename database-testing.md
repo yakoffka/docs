@@ -1,5 +1,5 @@
 ---
-git: 83761449ff271ccda95e4ea87eca0f5a772f59df
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Тестирование · База данных
@@ -15,29 +15,43 @@ Laravel предлагает множество полезных инструм�
 
 Прежде чем продолжить, давайте обсудим, как сбрасывать вашу базу данных после каждого из ваших тестов, чтобы данные из предыдущего теста не мешали последующим тестам. Включенный в Laravel трейт `Illuminate\Foundation\Testing\RefreshDatabase` позаботится об этом за вас. Просто используйте трейт в своем тестовом классе:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-    use Illuminate\Foundation\Testing\RefreshDatabase;
-    use Tests\TestCase;
+uses(RefreshDatabase::class);
 
-    class ExampleTest extends TestCase
+test('basic example', function () {
+    $response = $this->get('/');
+
+    // ...
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * A basic functional test example.
+     */
+    public function test_basic_example(): void
     {
-        use RefreshDatabase;
+        $response = $this->get('/');
 
-        /**
-         * Отвлеченный пример функционального теста.
-         *
-         * @return void
-         */
-        public function test_basic_example(): void
-        {
-            $response = $this->get('/');
-
-            // ...
-        }
+        // ...
     }
+}
+```
 
 Трейт `Illuminate\Foundation\Testing\RefreshDatabase` не мигрирует вашу базу данных, если ваша схема актуальна. Вместо этого он выполняет тест в пределах транзакции базы данных. Следовательно, любые записи, добавленные в базу данных в тестах, не использующих этот трейт, могут по-прежнему существовать в базе данных.
 
@@ -48,54 +62,95 @@ Laravel предлагает множество полезных инструм�
 
 Для более подробной информации о создании и использовании фабрик моделей для создания моделей обратитесь к полной [документации по фабрикам моделей](/docs/{{version}}/eloquent-factories). После того, как вы определили фабрику модели, вы можете использовать ее внутри вашего теста для создания моделей:
 
-    use App\Models\User;
+```php tab=Pest
+use App\Models\User;
 
-    public function test_models_can_be_instantiated(): void
-    {
-        $user = User::factory()->create();
+test('models can be instantiated', function () {
+    $user = User::factory()->create();
 
-        // ...
-    }
+    // ...
+});
+```
+
+```php tab=PHPUnit
+use App\Models\User;
+
+public function test_models_can_be_instantiated(): void
+{
+    $user = User::factory()->create();
+
+    // ...
+}
+```
 
 <a name="running-seeders"></a>
 ## Запуск наполнителей (seed, seeders)
 
 Если вы хотите использовать [наполнители базы данных](/docs/{{version}}/seeding) для наполнения вашей базы данных во время функционального тестирования, то вы можете вызвать метод `seed`. По умолчанию метод `seed` будет запускать `DatabaseSeeder`, который должен запускать все другие ваши наполнители. Как вариант, вы можете передать конкретное имя класса-наполнителя методу `seed`:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+use Database\Seeders\OrderStatusSeeder;
+use Database\Seeders\TransactionStatusSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-    use Database\Seeders\OrderStatusSeeder;
-    use Database\Seeders\TransactionStatusSeeder;
-    use Illuminate\Foundation\Testing\RefreshDatabase;
-    use Tests\TestCase;
+uses(RefreshDatabase::class);
 
-    class ExampleTest extends TestCase
+test('orders can be created', function () {
+    // Run the DatabaseSeeder...
+    $this->seed();
+
+    // Run a specific seeder...
+    $this->seed(OrderStatusSeeder::class);
+
+    // ...
+
+    // Run an array of specific seeders...
+    $this->seed([
+        OrderStatusSeeder::class,
+        TransactionStatusSeeder::class,
+        // ...
+    ]);
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Database\Seeders\OrderStatusSeeder;
+use Database\Seeders\TransactionStatusSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * Test creating a new order.
+     */
+    public function test_orders_can_be_created(): void
     {
-        use RefreshDatabase;
+        // Run the DatabaseSeeder...
+        $this->seed();
 
-        /**
-         * Тест создания нового заказа.
-         */
-        public function test_orders_can_be_created(): void
-        {
-            // Запустить `DatabaseSeeder` ...
-            $this->seed();
+        // Run a specific seeder...
+        $this->seed(OrderStatusSeeder::class);
 
-            // Запустить конкретный наполнитель ...
-            $this->seed(OrderStatusSeeder::class);
+        // ...
 
+        // Run an array of specific seeders...
+        $this->seed([
+            OrderStatusSeeder::class,
+            TransactionStatusSeeder::class,
             // ...
-
-            // Запустить массив наполнителей...
-            $this->seed([
-                OrderStatusSeeder::class,
-                TransactionStatusSeeder::class,
-                // ...
-            ]);
-        }
+        ]);
     }
+}
+```
 
 В качестве альтернативы, вы можете указать Laravel автоматически заполнять базу данных перед каждым тестом, который использует трейт `RefreshDatabase`. Вы можете добиться этого, определив свойство `$seed` в вашем базовом тестовом классе:
 
@@ -130,7 +185,7 @@ Laravel предлагает множество полезных инструм�
 <a name="available-assertions"></a>
 ## Доступные утверждения
 
-Laravel содержит несколько утверждений базы данных для ваших функциональных тестов [PHPUnit](https://phpunit.de/). Мы обсудим каждое из этих утверждений ниже.
+Laravel содержит несколько утверждений базы данных для ваших функциональных тестов [Pest](https://pestphp.com) или [PHPUnit](https://phpunit.de). Мы обсудим каждое из этих утверждений ниже.
 
 <a name="assert-database-count"></a>
 #### assertDatabaseCount
