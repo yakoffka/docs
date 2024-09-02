@@ -1,5 +1,5 @@
 ---
-git: 9d18a6436009502d2f3fd0a21853db9c2d22bb1c
+git: 24a9f991e9a7aa18f32e4ed48a5b2abd6ab0b99d
 ---
 
 # Тестирование · Тесты консольных команд
@@ -15,7 +15,13 @@ git: 9d18a6436009502d2f3fd0a21853db9c2d22bb1c
 
 Для начала давайте рассмотрим, как делать утверждения относительно кода выхода команды Artisan. Для этого мы будем использовать метод `artisan` для вызова Artisan-команды из нашего теста. Затем мы будем использовать метод `assertExitCode`, чтобы подтвердить, что команда завершилась с заданным кодом выхода:
 
-```php
+```php tab=Pest
+test('console command', function () {
+    $this->artisan('inspire')->assertExitCode(0);
+});
+```
+
+```php tab=PHPUnit
 /**
  * Test a console command.
  */
@@ -24,6 +30,7 @@ public function test_console_command(): void
     $this->artisan('inspire')->assertExitCode(0);
 }
 ```
+
 Вы можете использовать метод `assertNotExitCode` чтобы подтвердить, что команда не завершилась с заданным кодом выхода:
 
     $this->artisan('inspire')->assertNotExitCode(1);
@@ -51,11 +58,22 @@ Laravel позволяет вам легко «имитировать» ввод
         $this->line('Your name is '.$name.' and you prefer '.$language.'.');
     });
 
-Вы можете протестировать эту команду с помощью следующего теста, который использует методы `expectsQuestion`,` expectsOutput`, `doesntExpectOutput`, `expectsOutputToContain`, `doesntExpectOutputToContain`, и `assertExitCode`:
+Вы можете проверить эту команду с помощью следующего теста:
 
-```php
+```php tab=Pest
+test('console command', function () {
+    $this->artisan('question')
+         ->expectsQuestion('What is your name?', 'Taylor Otwell')
+         ->expectsQuestion('Which language do you prefer?', 'PHP')
+         ->expectsOutput('Your name is Taylor Otwell and you prefer PHP.')
+         ->doesntExpectOutput('Your name is Taylor Otwell and you prefer Ruby.')
+         ->assertExitCode(0);
+});
+```
+
+```php tab=PHPUnit
 /**
- * Тестирование консольной команды.
+ * Test a console command.
  */
 public function test_console_command(): void
 {
@@ -64,11 +82,85 @@ public function test_console_command(): void
          ->expectsQuestion('Which language do you prefer?', 'PHP')
          ->expectsOutput('Your name is Taylor Otwell and you prefer PHP.')
          ->doesntExpectOutput('Your name is Taylor Otwell and you prefer Ruby.')
-         ->expectsOutputToContain('Taylor Otwell')
-         ->doesntExpectOutputToContain('you prefer Ruby')
          ->assertExitCode(0);
 }
 ```
+
+Если вы используете функции `search` или `multisearch`, предоставляемые [Laravel Prompts](/docs/{{version}}/prompts), вы можете использовать утверждение `expectsSearch`, чтобы имитировать ввод пользователя, результаты поиска и выбор:
+
+```php tab=Pest
+test('console command', function () {
+    $this->artisan('example')
+         ->expectsSearch('What is your name?', search: 'Tay', answers: [
+            'Taylor Otwell',
+            'Taylor Swift',
+            'Darian Taylor'
+         ], answer: 'Taylor Otwell')
+         ->assertExitCode(0);
+});
+```
+
+```php tab=PHPUnit
+/**
+ * Test a console command.
+ */
+public function test_console_command(): void
+{
+    $this->artisan('example')
+         ->expectsSearch('What is your name?', search: 'Tay', answers: [
+            'Taylor Otwell',
+            'Taylor Swift',
+            'Darian Taylor'
+         ], answer: 'Taylor Otwell')
+         ->assertExitCode(0);
+}
+```
+
+Вы также можете утверждать, что консольная команда не генерирует никакого вывода, используя метод `doesntExpectOutput`:
+
+```php tab=Pest
+test('console command', function () {
+    $this->artisan('example')
+         ->doesntExpectOutput()
+         ->assertExitCode(0);
+});
+```
+
+```php tab=PHPUnit
+/**
+ * Test a console command.
+ */
+public function test_console_command(): void
+{
+    $this->artisan('example')
+            ->doesntExpectOutput()
+            ->assertExitCode(0);
+}
+```
+
+The `expectsOutputToContain` and `doesntExpectOutputToContain` methods may be used to make assertions against a portion of the output:
+Методы `expectsOutputToContain` и `doesntExpectOutputToContain` могут использоваться для создания утверждений относительно части вывода:
+
+```php tab=Pest
+test('console command', function () {
+    $this->artisan('example')
+         ->expectsOutputToContain('Taylor')
+         ->assertExitCode(0);
+});
+```
+
+```php tab=PHPUnit
+/**
+ * Test a console command.
+ */
+public function test_console_command(): void
+{
+    $this->artisan('example')
+            ->expectsOutputToContain('Taylor')
+            ->assertExitCode(0);
+}
+```
+
 <a name="confirmation-expectations"></a>
 #### Ожидания подтверждения
 
@@ -92,20 +184,33 @@ public function test_console_command(): void
             [2, 'abigail@example.com'],
         ]);
 
+<a name="console-events"></a>
 ## События консоли
 
 По умолчанию события `Illuminate\Console\Events\CommandStarting` и `Illuminate\Console\Events\CommandFinished` не генерируются при запуске тестов вашего приложения. Однако вы можете включить эти события для данного класса тестов, добавив трейт `Illuminate\Foundation\Testing\WithConsoleEvents` в класс:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+use Illuminate\Foundation\Testing\WithConsoleEvents;
 
-    use Illuminate\Foundation\Testing\WithConsoleEvents;
-    use Tests\TestCase;
+uses(WithConsoleEvents::class);
 
-    class ConsoleEventTest extends TestCase
-    {
-        use WithConsoleEvents;
+// ...
+```
 
-        // ...
-    }
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Foundation\Testing\WithConsoleEvents;
+use Tests\TestCase;
+
+class ConsoleEventTest extends TestCase
+{
+    use WithConsoleEvents;
+
+    // ...
+}
+```
