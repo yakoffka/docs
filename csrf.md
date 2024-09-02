@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: ce7e2f4cbd61092f04d543a2c180f54cb94d0229
 ---
 
 # Предотвращение атак CSRF
@@ -59,7 +59,7 @@ Laravel автоматически генерирует «токен» CSRF дл
 </form>
 ```
 
-[Посредник](/docs/{{version}}/middleware) `App\Http\Middleware\VerifyCsrfToken`, который по умолчанию стоит в группе посредников `web`, автоматически проверяет соответствие токена во входном запросе и токен, хранящийся в сессии. Когда эти два токена совпадают, мы знаем, что запрос инициирует аутентифицированный пользователь.
+[Посредник](/docs/{{version}}/middleware) `Illuminate\Foundation\Http\Middleware\ValidateCsrfToken`, который по умолчанию стоит в группе посредников `web`, автоматически проверяет соответствие токена во входном запросе и токен, хранящийся в сессии. Когда эти два токена совпадают, мы знаем, что запрос инициирует аутентифицированный пользователь.
 
 <a name="csrf-tokens-and-spas"></a>
 ### CSRF-токены и SPA-приложения
@@ -71,27 +71,15 @@ Laravel автоматически генерирует «токен» CSRF дл
 
 По желанию можно исключить набор URI из защиты от CSRF. Например, если вы используете [Stripe](https://stripe.com) для обработки платежей и используете их систему веб-хуков, вам нужно будет исключить маршрут обработчика веб-хуков Stripe из защиты от CSRF, поскольку Stripe не будет знать, какой токен CSRF отправить вашим маршрутам.
 
-Как правило, вы должны размещать эти виды маршрутов вне группы посредников `web`, которую `App\Providers\RouteServiceProvider` применяет ко всем маршрутам в файле `routes/web.php`. Однако, вы также можете исключить маршруты, добавив их URI в свойство `$except` посредника `VerifyCsrfToken`:
+Как правило, вы должны размещать эти виды маршрутов вне группы посредников `web`, которую Laravel применяет ко всем маршрутам в файле `routes/web.php`. Однако вы также можете исключить определенные маршруты, указав их URI методу `validateCsrfTokens` в файле `bootstrap/app.php` вашего приложения:
 
-    <?php
-
-    namespace App\Http\Middleware;
-
-    use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Middleware;
-
-    class VerifyCsrfToken extends Middleware
-    {
-        /**
-         * URI, которые следует исключить из проверки CSRF.
-         *
-         * @var array
-         */
-        protected $except = [
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
             'stripe/*',
             'http://example.com/foo/bar',
             'http://example.com/foo/*',
-        ];
-    }
+        ]);
+    })
 
 > [!NOTE]  
 > Для удобства посредник CSRF автоматически отключается для всех маршрутов при [выполнении тестов](/docs/{{version}}/testing).
@@ -99,7 +87,7 @@ Laravel автоматически генерирует «токен» CSRF дл
 <a name="csrf-x-csrf-token"></a>
 ## Токен X-CSRF
 
-В дополнение к проверке токена CSRF в качестве параметра POST-запроса посредник `App\Http\Middleware\VerifyCsrfToken` также проверяет заголовок запроса `X-CSRF-TOKEN`. Вы можете, например, сохранить токен в HTML-теге `meta`:
+В дополнение к проверке токена CSRF в качестве параметра POST-запроса посредник `Illuminate\Foundation\Http\Middleware\ValidateCsrfToken`, который по умолчанию включен в группу посредников `web`, также проверяет заголовок запроса `X-CSRF-TOKEN`. Вы можете, например, сохранить токен в HTML-теге `meta`:
 
 ```html
 <meta name="csrf-token" content="{{ csrf_token() }}">
