@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Контейнер служб (service container)
@@ -15,12 +15,10 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
     namespace App\Http\Controllers;
 
-    use App\Http\Controllers\Controller;
-    use App\Repositories\UserRepository;
-    use App\Models\User;
+    use App\Services\AppleMusic;
     use Illuminate\View\View;
 
-    class UserController extends Controller
+    class PodcastController extends Controller
     {
         /**
          * Создать новый экземпляр контроллера.
@@ -29,21 +27,21 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
          * @return void
          */
         public function __construct(
-            protected UserRepository $users,
+            protected AppleMusic $apple,
         ) {}
 
         /**
-         * Показать профиль конкретного пользователя.
+         * Показать информацию о данном подкасте.
          */
         public function show(string $id): View
         {
-            $user = $this->users->find($id);
-
-            return view('user.profile', ['user' => $user]);
+            return view('podcasts.show', [
+                'podcast' => $this->apple->findPodcast($id)
+            ]);
         }
     }
 
-В этом примере `UserController` необходимо получить пользователей из источника данных. Итак, мы **внедрим** службу, которая может получать пользователей. В этом контексте наш `UserRepository`, скорее всего, использует [Eloquent](/docs/{{version}}/eloquent) для получения информации о пользователе из базы данных. Однако, поскольку репозиторий внедрен, мы можем легко заменить его другой реализацией. Мы также можем легко «имитировать» или создать фиктивную реализацию `UserRepository` при тестировании нашего приложения.
+В этом примере `PodcastController` необходимо получить подкасты из источника данных, такого как Apple Music. Итак, мы **внедрим** сервис, способный извлекать подкасты. Поскольку служба внедрена, мы можем легко «имитировать» или создать фиктивную реализацию службы `AppleMusic` при тестировании нашего приложения.
 
 Глубокое понимание контейнера служб Laravel необходимо для создания большого, мощного приложения, а также для внесения вклада в само ядро Laravel.
 
@@ -371,32 +369,29 @@ $this->app->singletonIf(Transistor::class, function (Application $app) {
 
 Важно, что в качестве альтернативы, вы можете объявить тип зависимости в конструкторе класса, который извлекается контейнером, включая [контроллеры](/docs/{{version}}/controllers), [слушатели событий](/docs/{{version}}/events), [посредники](/docs/{{version}}/middleware ) и т.д. Кроме того, вы можете объявить зависимости в методе `handle` обработки [заданий в очереди](/docs/{{version}}/queues). На практике именно так контейнер должен извлекать большинство ваших объектов.
 
-Например, вы можете объявить репозиторий, определенный вашим приложением, в конструкторе контроллера. Репозиторий будет автоматически получен и внедрен в класс:
+Например, вы можете объявить сервис, определенный вашим приложением, в конструкторе контроллера. Сервис будет автоматически получен и внедрен в класс:
 
     <?php
 
     namespace App\Http\Controllers;
 
-    use App\Repositories\UserRepository;
-    use App\Models\User;
+    use App\Services\AppleMusic;
 
-    class UserController extends Controller
+    class PodcastController extends Controller
     {
         /**
          * Создать новый экземпляр контроллера.
          */
         public function __construct(
-            protected UserRepository $users,
+            protected AppleMusic $apple,
         ) {}
 
         /**
-         * Показать пользователя с переданным идентификатором.
+         * Показать информацию о данном подкасте.
          */
-        public function show(string $id): User
+        public function show(string $id): Podcast
         {
-            $user = $this->users->findOrFail($id);
-
-            return $user;
+            return $this->apple->findPodcast($id);
         }
     }
 
@@ -410,14 +405,14 @@ $this->app->singletonIf(Transistor::class, function (Application $app) {
 
     namespace App;
 
-    use App\Repositories\UserRepository;
+    use App\Services\AppleMusic;
 
-    class UserReport
+    class PodcastStats
     {
         /**
-         * Generate a new user report.
+         * Generate a new podcast stats report.
          */
-        public function generate(UserRepository $repository): array
+        public function generate(AppleMusic $apple): array
         {
             return [
                 // ...
@@ -427,17 +422,17 @@ $this->app->singletonIf(Transistor::class, function (Application $app) {
 
 Вы можете вызвать метод `generate` через контейнер следующим образом:
 
-    use App\UserReport;
+    use App\PodcastStats;
     use Illuminate\Support\Facades\App;
 
-    $report = App::call([new UserReport, 'generate']);
+    $stats = App::call([new PodcastStats, 'generate']);
 
 Метод `call` принимает любой вызываемый PHP-код. Метод контейнера `call` может даже использоваться для вызова замыкания при автоматическом внедрении его зависимостей:
 
-    use App\Repositories\UserRepository;
+    use App\Services\AppleMusic;
     use Illuminate\Support\Facades\App;
 
-    $result = App::call(function (UserRepository $repository) {
+    $result = App::call(function (AppleMusic $apple) {
         // ...
     });
 
