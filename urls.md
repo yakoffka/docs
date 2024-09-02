@@ -1,5 +1,5 @@
 ---
-git: 83761449ff271ccda95e4ea87eca0f5a772f59df
+git: 89fca51366bd2495622ebf3c2f413793bc18e256
 ---
 
 # Генерация URL-адресов
@@ -22,6 +22,32 @@ Laravel предлагает несколько функций, которые �
     echo url("/posts/{$post->id}");
 
     // http://example.com/posts/1
+
+Чтобы сгенерировать URL-адрес с параметрами строки запроса, вы можете использовать метод `query`:
+
+    echo url()->query('/posts', ['search' => 'Laravel']);
+
+    // https://example.com/posts?search=Laravel
+
+    echo url()->query('/posts?sort=latest', ['search' => 'Laravel']);
+
+    // http://example.com/posts?sort=latest&search=Laravel
+
+Предоставление параметров строки запроса, которые уже существуют в адресе, перезапишет их существующее значение:
+
+    echo url()->query('/posts?sort=latest', ['sort' => 'oldest']);
+
+    // http://example.com/posts?sort=oldest
+
+Массивы значений также могут передаваться в качестве параметров запроса. Эти значения будут правильно введены и закодированы в сгенерированном URL-адресе:
+
+    echo $url = url()->query('/posts', ['columns' => ['title', 'body']]);
+
+    // http://example.com/posts?columns%5B0%5D=title&columns%5B1%5D=body
+
+    echo urldecode($url);
+
+    // http://example.com/posts?columns[0]=title&columns[1]=body
 
 <a name="accessing-the-current-url"></a>
 ### Доступ к текущему URL
@@ -125,21 +151,7 @@ Laravel позволяет вам легко создавать «подписа
         abort(401);
     }
 
-Вместо проверки подписанных URL-адресов с помощью экземпляра входящего запроса, вы можете назначить [последника (middleware)](/docs/{{version}}/middleware) `Illuminate\Routing\Middleware\ValidateSignature` маршруту.
-Если оно еще не присутствует, вы можете назначить этому посреднику псевдоним в массиве `$middlewareAliases` вашего HTTP ядра:
-
-    /**
-     * The application's middleware aliases.
-     *
-     * Aliases may be used to conveniently assign middleware to routes and groups.
-     *
-     * @var array<string, class-string|string>
-     */
-    protected $middlewareAliases = [
-        'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
-    ];
-
-После того как вы зарегистрировали посредников в ядре приложения, вы можете назначить его маршруту. Если входящий запрос не имеет действительной подписи, посредник автоматически вернет HTTP-ответ `403`:
+Вместо проверки подписанных URL-адресов с помощью экземпляра входящего запроса вы можете назначить маршруту `signed` (`Illuminate\Routing\Middleware\ValidateSignature`) [посредника (middleware)](/docs/{{version}}/middleware). Если входящий запрос не имеет действительной подписи, промежуточное программное обеспечение автоматически вернет HTTP-ответ «403»:
 
     Route::post('/unsubscribe/{user}', function (Request $request) {
         // ...
@@ -154,19 +166,15 @@ Laravel позволяет вам легко создавать «подписа
 <a name="responding-to-invalid-signed-routes"></a>
 #### Ответ на недействительные подписанные маршруты
 
-Когда кто-то посещает подписанный URL-адрес, срок действия которого истек, он получит общую страницу с ошибкой для кода состояния `403` HTTP. Однако вы можете настроить это поведение, определив пользовательское «отображаемое» замыкание для исключения `InvalidSignatureException` в обработчике исключений. Это замыкание должно вернуть HTTP-ответ:
+Когда кто-то посещает подписанный URL-адрес, срок действия которого истек, он получит общую страницу с ошибкой для кода состояния `403` HTTP. Однако вы можете настроить это поведение, определив собственное замыкание «рендеринга» для исключения `InvalidSignatureException` в файле `bootstrap/app.php` вашего приложения:
 
     use Illuminate\Routing\Exceptions\InvalidSignatureException;
 
-    /**
-     * Зарегистрируйте обратные вызовы обработки исключений для приложения.
-     */
-    public function register(): void
-    {
-        $this->renderable(function (InvalidSignatureException $e) {
-            return response()->view('error.link-expired', [], 403);
+    ->withExceptions(function (Exceptions $exceptions) {
+        $exceptions->render(function (InvalidSignatureException $e) {
+            return response()->view('errors.link-expired', status: 403);
         });
-    }
+    })
 
 <a name="urls-for-controller-actions"></a>
 ## URL для действий контроллера
@@ -222,20 +230,24 @@ class SetDefaultLocaleForUrls
 <a name="url-defaults-middleware-priority"></a>
 #### Параметры URL по умолчанию и приоритет посредника
 
-Установка значений URL по умолчанию может мешать Laravel обрабатывать неявные привязки модели. Следовательно, необходимо [установить приоритет посреднику](/docs/{{version}}/middleware#sorting-middleware), который задает значения URL по умолчанию, и должен выполняться перед посредником Laravel `SubstituteBindings`. Вы можете добиться этого, убедившись, что ваш посредник находится перед посредником `SubstituteBindings` в свойстве `$middlewarePriority` HTTP-ядра вашего приложения.
+Установка значений URL по умолчанию может мешать Laravel обрабатывать неявные привязки модели. Следовательно, необходимо [установить приоритет посреднику](/docs/{{version}}/middleware#sorting-middleware), который задает значения URL по умолчанию, и должен выполняться перед посредником Laravel `SubstituteBindings`. Вы можете сделать это, используя метод промежуточного программного обеспечения `priority` в файле `bootstrap/app.php` вашего приложения:
 
-Свойство `$middlewarePriority` определено в базовом классе `Illuminate\Foundation\Http\Kernel`. Вы можете скопировать его определение из этого класса и перезаписать его в HTTP-ядре вашего приложения, чтобы изменить приоритет:
-
-    /**
-     * Список посредников, отсортированный по приоритетности.
-     *
-     * Заставит неглобальных посредников всегда быть в заданном порядке.
-     *
-     * @var array
-     */
-    protected $middlewarePriority = [
-        // ...
-         \App\Http\Middleware\SetDefaultLocaleForUrls::class,
-         \Illuminate\Routing\Middleware\SubstituteBindings::class,
-         // ...
-    ];
+```php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->priority([
+        \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+        \Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequests::class,
+        \Illuminate\Routing\Middleware\ThrottleRequestsWithRedis::class,
+        \Illuminate\Session\Middleware\AuthenticateSession::class,
+        \App\Http\Middleware\SetDefaultLocaleForUrls::class, // [tl! add]
+        \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        \Illuminate\Auth\Middleware\Authorize::class,
+    ]);
+})
+```
