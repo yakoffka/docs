@@ -1,5 +1,5 @@
 ---
-git: d655507c36ef5f692f67cd091028758345ab2e53
+git: 7b696f268160e61c19eeed2a9c49191ae89f6bf1
 ---
 
 # Сборка ресурсов (Vite)
@@ -175,7 +175,7 @@ export default defineConfig({
 После настройки точек входа Vite вы можете ссылаться на них с помощью директивы `@vite()` в Blade, которую вы должны добавить в `<head>` корневого шаблона вашего приложения:
 
 ```blade
-<!doctype html>
+<!DOCTYPE html>
 <head>
     {{-- ... --}}
 
@@ -186,7 +186,7 @@ export default defineConfig({
 Если вы импортируете свой CSS через JavaScript, вам нужно включить только точку входа JavaScript:
 
 ```blade
-<!doctype html>
+<!DOCTYPE html>
 <head>
     {{-- ... --}}
 
@@ -213,9 +213,7 @@ export default defineConfig({
 Иногда может быть необходимо включить сырое содержимое ресурсов, а не ссылаться на версионный URL ресурса. Например, вам может понадобиться включить содержимое ресурса непосредственно на страницу, когда передаете HTML-контент генератору PDF. Вы можете выводить содержимое ресурсов Vite с помощью метода `content`, предоставленного фасадом `Vite`:
 
 ```blade
-@php
-use Illuminate\Support\Facades\Vite;
-@endphp
+@use('Illuminate\Support\Facades\Vite')
 
 <!doctype html>
 <head>
@@ -383,10 +381,11 @@ createInertiaApp({
 
 > [!NOTE]  
 > Стартовые наборы Laravel ([starter kits](/docs/{{version}}/starter-kits)) уже включают правильную конфигурацию Laravel, Inertia и Vite. Ознакомьтесь с [Laravel Breeze](/docs/{{version}}/starter-kits#breeze-and-inertia) чтобы быстро начать работу с Laravel, Inertia и Vite.
+
 <a name="url-processing"></a>
 ### Обработка URL
 
-При использовании Vite и ссылок на ресурсы в HTML, CSS или JS вашего приложения, следует учитывать несколько моментов. Во-первых, если вы ссылаетесь на ресурсы с абсолютным путем, Vite не включит ресурс в сборку; поэтому убедитесь, что ресурс доступен в вашей публичной директории.
+При использовании Vite и ссылок на ресурсы в HTML, CSS или JS вашего приложения, следует учитывать несколько моментов. Во-первых, если вы ссылаетесь на ресурсы с абсолютным путем, Vite не включит ресурс в сборку; поэтому убедитесь, что ресурс доступен в вашей публичной директории. Вам следует избегать использования абсолютных путей при использовании [выделенной точки входа CSS](#configuring-vite), поскольку во время разработки браузеры будут пытаться загрузить эти пути с сервера разработки Vite, где размещен CSS, а не из вашего общедоступного каталога.
 
 При использовании относительных путей к ресурсам помните, что пути относительны файлу, в котором они используются. Любые ресурсы, ссылки на которые осуществляются через относительный путь, будут переписаны, версионированны и собраны Vite.
 
@@ -472,6 +471,7 @@ export default defineConfig({
 
 Когда параметр `refresh` установлен в `true`, сохранение файлов в следующих каталогах вызовет полное обновление страницы в браузере при выполнении команды `npm run dev`:
 
+- `app/Livewire/**`
 - `app/View/Components/**`
 - `lang/**`
 - `resources/lang/**`
@@ -573,7 +573,14 @@ import.meta.env.VITE_SENTRY_DSN_PUBLIC
 
 Если вы предпочитаете использовать имитацию Vite во время тестирования, вы можете вызвать метод `withoutVite`, который доступен для всех тестов, расширяющих класс `TestCase` Laravel:
 
-```php
+```php tab=Pest
+test('without vite example', function () {
+    $this->withoutVite();
+    // ...
+});
+```
+
+```php tab=PHPUnit
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -598,8 +605,6 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesApplication;
-
     protected function setUp(): void// [tl! add:start]
     {
         parent::setUp();
