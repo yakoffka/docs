@@ -1,5 +1,5 @@
 ---
-git: c36b582408cb0eddf291238ce5fb1bee21979402
+git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
 ---
 
 # Уведомления
@@ -123,9 +123,6 @@ php artisan make:notification InvoicePaid
 
     $user->notify((new InvoicePaid($invoice))->delay($delay));
 
-<a name="delaying-notifications-per-channel"></a>
-#### Отложенные уведомления для каналов
-
 Вы можете передать массив методу `delay`, чтобы указать величину задержки для определенных каналов:
 
     $user->notify((new InvoicePaid($invoice))->delay([
@@ -213,6 +210,27 @@ class InvoicePaid extends Notification implements ShouldQueue
             'mail' => 'mail-queue',
             'slack' => 'slack-queue',
         ];
+    }
+
+<a name="queued-notification-middleware"></a>
+#### Посредник для уведомлений в очереди
+
+Уведомления в очереди могут определять промежуточное программное обеспечение [так же, как задания в очереди](/docs/{{version}}/queues#job-middleware). Для начала определите метод `middleware` в своем классе уведомлений. Метод `middleware` получит переменные `$notifying` и `$channel`, которые позволят вам настроить возвращаемое промежуточное программное обеспечение в зависимости от места назначения уведомления:
+
+    use Illuminate\Queue\Middleware\RateLimited;
+
+    /**
+     * Get the middleware the notification job should pass through.
+     *
+     * @return array<int, object>
+     */
+    public function middleware(object $notifiable, string $channel)
+    {
+        return match ($channel) {
+            'email' => [new RateLimited('postmark')],
+            'slack' => [new RateLimited('slack')],
+            default => [],
+        };
     }
 
 <a name="queued-notifications-and-database-transactions"></a>
@@ -726,10 +744,10 @@ This is the panel content.
 
 ```blade
 <x-mail::table>
-| Laravel       | Table         | Example  |
-| ------------- |:-------------:| --------:|
-| Col 2 is      | Centered      | $10      |
-| Col 3 is      | Right-Aligned | $20      |
+| Laravel       | Table         | Example       |
+| ------------- | :-----------: | ------------: |
+| Col 2 is      | Centered      | $10           |
+| Col 3 is      | Right-Aligned | $20           |
 </x-mail::table>
 ```
 
@@ -772,10 +790,10 @@ php artisan vendor:publish --tag=laravel-mail
 
 Канал уведомлений `database` хранит информацию уведомления в таблице базы данных. Эта таблица будет содержать такую информацию, как тип уведомления, а также JSON-структуру данных, которая описывает уведомление.
 
-Вы можете запросить таблицу, чтобы отобразить уведомления в пользовательском интерфейсе вашего приложения. Но прежде чем вы сможете это сделать, вам нужно будет создать таблицу базы данных для хранения ваших уведомлений. Вы можете использовать команду `notifications:table` для создания [миграции](/docs/{{version}}/migrations) с необходимой схемой таблицы:
+Вы можете запросить таблицу, чтобы отобразить уведомления в пользовательском интерфейсе вашего приложения. Но прежде чем вы сможете это сделать, вам нужно будет создать таблицу базы данных для хранения ваших уведомлений. Вы можете использовать команду `make:notifications-table` для создания [миграции](/docs/{{version}}/migrations) с необходимой схемой таблицы:
 
 ```shell
-php artisan notifications:table
+php artisan make:notifications-table
 
 php artisan migrate
 ```
@@ -1329,7 +1347,36 @@ Laravel позволяет отправлять уведомления, испо
 
 После вызова метода `fake` фасада `Notification`, вы можете проверить, было ли передано инструкции отправить уведомления пользователям, и даже проверить данные, полученные уведомлениями:
 
-```php
+```php tab=Pest
+<?php
+
+use App\Notifications\OrderShipped;
+use Illuminate\Support\Facades\Notification;
+
+test('orders can be shipped', function () {
+    Notification::fake();
+
+    // Выполняем доставку заказа...
+
+    // Утверждаем, что уведомления не были отправлены...
+    Notification::assertNothingSent();
+
+    // Утверждаем, что уведомление было отправлено указанным пользователям...
+    Notification::assertSentTo(
+        [$user], OrderShipped::class
+    );
+
+    // Утверждаем, что уведомление не было отправлено...
+    Notification::assertNotSentTo(
+        [$user], AnotherNotification::class
+    );
+
+    // Утверждаем, что было отправлено заданное количество уведомлений...
+    Notification::assertCount(3);
+});
+```
+
+```php tab=PHPUnit
 <?php
 
 namespace Tests\Feature;
@@ -1402,28 +1449,25 @@ Notification::assertSentOnDemand(
 <a name="notification-sending-event"></a>
 #### Событие отправки уведомления
 
-При отправке уведомлений, система уведомлений запускает [событие](/docs/{{version}}/events) `Illuminate\Notifications\Events\NotificationSending`. Событие содержит уведомляемую сущность и сам экземпляр уведомления. Вы можете зарегистрировать слушателей этого события в поставщике `EventServiceProvider`:
-
-    use App\Listeners\CheckNotificationStatus;
-    use Illuminate\Notifications\Events\NotificationSending;
-
-    /**
-     * Сопоставление прослушивателя событий для приложения.
-     *
-     * @var array
-     */
-    protected $listen = [
-        NotificationSending::class => [
-            CheckNotificationStatus::class,
-        ],
-    ];
-
-Уведомление не будет отправлено, если слушатель событий для события `NotificationSending` вернет `false` из своего метода `handle`:
+При отправке уведомления, система уведомлений запускает событие `Illuminate\Notifications\Events\NotificationSending`. Он содержит «уведомляемый» объект и сам экземпляр уведомления. Вы можете создать [прослушиватели событий](/docs/{{version}}/events) для этого события в своем приложении:
 
     use Illuminate\Notifications\Events\NotificationSending;
 
+    class CheckNotificationStatus
+    {
+        /**
+         * Handle the given event.
+         */
+        public function handle(NotificationSending $event): void
+        {
+            // ...
+        }
+    }
+
+Уведомление не будет отправлено, если прослушиватель событий NotificationSending возвращает `false` из своего метода `handle`:
+
     /**
-     * Обработка события.
+     * Обработка данного события.
      */
     public function handle(NotificationSending $event): bool
     {
@@ -1433,7 +1477,7 @@ Notification::assertSentOnDemand(
 В слушателе событий вы можете получить доступ к свойствам `notifiable`, `notification` и `channel` события, чтобы узнать больше о получателе уведомления или самом уведомлении:
 
     /**
-     * Обработка события.
+     * Обработка данного события.
      */
     public function handle(NotificationSending $event): void
     {
@@ -1445,24 +1489,20 @@ Notification::assertSentOnDemand(
 <a name="notification-sent-event"></a>
 #### Событие после отправки уведомления
 
-Когда уведомление отправлено, система уведомлений запускает [событие](/docs/{{version}}/events) `Illuminate\Notifications\Events\NotificationSent`. Событие содержит уведомляемую сущность и сам экземпляр уведомления. Вы можете зарегистрировать слушателей этого события в поставщике `EventServiceProvider`:
+Когда уведомление отправлено, система уведомлений запускает [событие](/docs/{{version}}/events) `Illuminate\Notifications\Events\NotificationSent`. Событие содержит уведомляемую сущность и сам экземпляр уведомления. Вы можете создать [прослушиватели событий](/docs/{{version}}/events) для этого события в своем приложении:
 
-    use App\Listeners\LogNotification;
     use Illuminate\Notifications\Events\NotificationSent;
 
-    /**
-     * The event listener mappings for the application.
-     *
-     * @var array
-     */
-    protected $listen = [
-        NotificationSent::class => [
-            LogNotification::class,
-        ],
-    ];
-
-> [!NOTE]  
-> После регистрации слушателей в вашем `EventServiceProvider` используйте команду `event:generate` Artisan, чтобы быстро сгенерировать классы слушателей.
+    class LogNotification
+    {
+        /**
+         * Обработать переданное событие.
+         */
+        public function handle(NotificationSent $event): void
+        {
+            // ...
+        }
+    }
 
 В слушателе события вы можете получить доступ к свойствам `notifiable`, `notification`, `channel` и `response` события, чтобы узнать больше о получателе уведомления или самом уведомлении:
 
