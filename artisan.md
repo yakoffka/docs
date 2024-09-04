@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: b9fa924860cb30ba5be04d6dddb62f4b6ce17d19
 ---
 
 # Консоль Artisan
@@ -67,7 +67,7 @@ php artisan vendor:publish --provider="Laravel\Tinker\TinkerServiceProvider"
 <a name="command-allow-list"></a>
 #### Список разрешенных команд
 
-Tinker использует список «разрешенных» команд, которые разрешено запускать Artisan в её среде. По умолчанию вы можете запускать команды `clear-compiled`, `down`, `env`, `inspire`, `migrate`, `optimize` и `up`. Для добавления в этот список больше команд, добавьте их в массив `commands` конфигурационного файла `config/tinker.php`:
+Tinker использует список «разрешенных» команд, которые разрешено запускать Artisan в её среде. По умолчанию вы можете запускать команды `clear-compiled`, `down`, `env`, `inspire`, `migrate`, `migrate:install`, `up` и `optimize`. Для добавления в этот список больше команд, добавьте их в массив `commands` конфигурационного файла `config/tinker.php`:
 
     'commands' => [
         // App\Console\Commands\ExampleCommand::class,
@@ -140,20 +140,25 @@ php artisan make:command SendEmails
 > [!NOTE]
 > Хорошей практикой повторного использования кода считается создание «простых» консольных команд с делегированием своих задач службам приложения. В приведенном примере мы внедряем класс службы для выполнения «затратной» отправки электронных писем.
 
+<a name="exit-codes"></a>
+#### Коды завершения
+
+Если из метода `handle` ничего не возвращается и команда выполняется успешно, команда завершится с кодом завершения `0`, что указывает на успех. Однако метод `handle` может дополнительно возвращать целое число, чтобы вручную указать код завершения команды:
+
+    $this->error('Something went wrong.');
+
+    return 1;
+
+Если вы хотите «не выполнить» команду любым методом внутри команды, вы можете использовать метод `fail`. Метод `fail` немедленно прекратит выполнение команды и вернет код завершения `1`:
+
+    $this->fail('Something went wrong.');
+
 <a name="closure-commands"></a>
 ### Анонимные команды
 
-Анонимные команды обеспечивают альтернативу определению консольных команд в виде классов. Точно так же, как замыкания маршрутов являются альтернативой контроллерам. В рамках метода `commands` файла `app/Console/Kernel.php` Laravel загружает файл `routes/console.php`:
+Анонимные команды обеспечивают альтернативу определению консольных команд в виде классов. Точно так же, как замыкания маршрутов являются альтернативой контроллерам.
 
-    /**
-     * Зарегистрировать команды, основанные на анонимных функциях.
-     */
-    protected function commands(): void
-    {
-        require base_path('routes/console.php');
-    }
-
-Этот файл не определяет маршруты HTTP, он определяет точки входа (маршруты) для консольных команд в приложении. В этом файле с помощью метода `Artisan::command` можно определить все анонимные консольные команды. Метод `command` принимает два аргумента: [сигнатуру команды](#defining-input-expectations) и замыкание, которое получает аргументы и параметры команды:
+Несмотря на то, что файл `routes/console.php` не определяет HTTP-маршруты, он определяет консольные точки входа (маршруты) в ваше приложение. В этом файле вы можете определить все консольные команды на основе замыканий, используя метод `Artisan::command`. Метод `command` принимает два аргумента: [сигнатура команды](#defining-input-expectations) и замыкание, которое получает аргументы и параметры команды:
 
     Artisan::command('mail:send {user}', function (string $user) {
         $this->info("Sending email to: {$user}!");
@@ -399,9 +404,9 @@ php artisan mail:send --id=1 --id=2
     /**
      * Prompt for missing input arguments using the returned questions.
      *
-     * @return array
+     * @return array<string, string>
      */
-    protected function promptForMissingArgumentsUsing()
+    protected function promptForMissingArgumentsUsing(): array
     {
         return [
             'user' => 'Which user ID should receive the mail?',
@@ -446,12 +451,8 @@ php artisan mail:send --id=1 --id=2
 
     /**
      * Выполнить действия после запроса пользователя относительно отсутствующих аргументов
-     *
-     * @param  \Symfony\Component\Console\Input\InputInterface  $input
-     * @param  \Symfony\Component\Console\Output\OutputInterface  $output
-     * @return void
      */
-    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output)
+    protected function afterPromptingForMissingArguments(InputInterface $input, OutputInterface $output): void
     {
         $input->setOption('queue', confirm(
             label: 'Would you like to queue the mail?',
@@ -636,29 +637,26 @@ php artisan mail:send --id=1 --id=2
     $bar->finish();
 
 > [!NOTE]
-> Для получения дополнительной информации ознакомьтесь с [разделом документации компонента Symfony Progress Bar](https://symfony.com/doc/current/components/console/helpers/progressbar.html).
+> Для получения дополнительной информации ознакомьтесь с [разделом документации компонента Symfony Progress Bar](https://symfony.com/doc/7.0/components/console/helpers/progressbar.html).
 
 <a name="registering-commands"></a>
 ## Регистрация команд
 
-Все ваши консольные команды должны быть зарегистрированы в классе `App\Console\Kernel`, который является «ядром консоли» вашего приложения. Внутри метода `commands` этого класса вы увидите вызов метода `load` ядра. Метод `load` просканирует каталог `app/Console/Commands` и автоматически зарегистрирует каждую содержащуюся в нем команду в Artisan. Фактически, вы можете делать дополнительные вызовы метода `load` для сканирования других каталогов на наличие команд Artisan:
+По умолчанию Laravel автоматически регистрирует все команды в каталоге `app/Console/Commands`. Однако вы можете поручить Laravel сканировать другие каталоги на наличие команд Artisan, используя метод `withCommands` в файле `bootstrap/app.php` вашего приложения:
 
-    /**
-     * Зарегистрировать команды приложения.
-     */
-    protected function commands(): void
-    {
-        $this->load(__DIR__.'/Commands');
-        $this->load(__DIR__.'/../Domain/Orders/Commands');
+    ->withCommands([
+        __DIR__.'/../app/Domain/Orders/Commands',
+    ])
 
-        // ...
-    }
+При необходимости вы также можете зарегистрировать команды вручную, указав имя класса команды в методе `withCommands`:
 
-Вы можете самостоятельно зарегистрировать команды, добавив название класса команды в свойство `$commands` класса `App\Console\Kernel`. Если это свойство еще не определено в вашем ядре, вы должны определить его вручную. При загрузке Artisan, все команды, перечисленные в этом свойстве будут доступны в [контейнере служб](/docs/{{version}}/container) и зарегистрированы в Artisan:
+    use App\Domain\Orders\Commands\SendEmails;
 
-    protected $commands = [
-        Commands\SendEmails::class
-    ];
+    ->withCommands([
+        SendEmails::class,
+    ])
+
+Когда Artisan загрузится, все команды в вашем приложении будут обработаны [сервисным контейнером](/docs/{{version}}/container) и зарегистрированы в Artisan.
 
 <a name="programmatically-executing-commands"></a>
 ## Программное выполнение команд
