@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: e1f9a340efffc94646db3d4b70925bbbb8458f12
 ---
 
 # База данных · Начало работы
@@ -11,10 +11,10 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 Почти каждое современное веб-приложение взаимодействует с базой данных. Laravel делает взаимодействие с базами данных чрезвычайно простым через поддержку множества баз данных, используя либо сырой SQL [построителя запросов](/docs/{{version}}/queries), либо [Eloquent ORM](/docs/{{version}}/eloquent). В настоящее время Laravel обеспечивает поддержку пяти баз данных:
 
 <!-- <div class="content-list" markdown="1"> -->
-- MariaDB 10.10+ ([Version Policy](https://mariadb.org/about/#maintenance-policy))
+- MariaDB 10.3+ ([Version Policy](https://mariadb.org/about/#maintenance-policy))
 - MySQL 5.7+ ([Version Policy](https://en.wikipedia.org/wiki/MySQL#Release_history))
-- PostgreSQL 11.0+ ([Version Policy](https://www.postgresql.org/support/versioning/))
-- SQLite 3.8.8+
+- PostgreSQL 10.0+ ([Version Policy](https://www.postgresql.org/support/versioning/))
+- SQLite 3.26.0+
 - SQL Server 2017+ ([Version Policy](https://docs.microsoft.com/en-us/lifecycle/products/?products=sql-server))
 <!-- </div> -->
 
@@ -35,11 +35,14 @@ DB_CONNECTION=sqlite
 DB_DATABASE=/absolute/path/to/database.sqlite
 ```
 
-Чтобы включить ограничения внешнего ключа для соединений SQLite, установите переменную `DB_FOREIGN_KEYS` окружения в `true`:
+По умолчанию ограничения внешнего ключа включены для соединений SQLite. Если вы хотите отключить их, вам следует установить для переменной среды `DB_FOREIGN_KEYS` значение `false`:
 
 ```ini
-DB_FOREIGN_KEYS=true
+DB_FOREIGN_KEYS=false
 ```
+
+> [!NOTE]  
+> Если вы используете [установщик Laravel](/docs/{{version}}/installation#creating-a-laravel-project) для создания приложения Laravel и выбираете SQLite в качестве базы данных, Laravel автоматически создаст `database/database.sqlite` и запустит для вас стандартную [миграцию базы данных](/docs/{{version}}/migrations).
 
 <a name="mssql-configuration"></a>
 #### Конфигурация Microsoft SQL Server
@@ -63,7 +66,7 @@ mysql://root:password@127.0.0.1/forge?charset=UTF-8
 driver://username:password@host:port/database?options
 ```
 
-Для удобства Laravel поддерживает эти URL-адреса в качестве альтернативы настройке базы данных с несколькими параметрами конфигурации. Если присутствует параметр конфигурации `url` (или соответствующая переменная `DATABASE_URL` окружения), то он будет использоваться для получения информации о соединении с базой данных и об учетных данных.
+Для удобства Laravel поддерживает эти URL-адреса в качестве альтернативы настройке базы данных с несколькими параметрами конфигурации. Если присутствует параметр конфигурации `url` (или соответствующая переменная `DB_URL` окружения), то он будет использоваться для получения информации о соединении с базой данных и об учетных данных.
 
 <a name="read-and-write-connections"></a>
 ### Соединения для чтения и записи
@@ -85,13 +88,20 @@ driver://username:password@host:port/database?options
             ],
         ],
         'sticky' => true,
-        'driver' => 'mysql',
-        'database' => 'database',
-        'username' => 'root',
-        'password' => '',
-        'charset' => 'utf8mb4',
-        'collation' => 'utf8mb4_unicode_ci',
+
+        'database' => env('DB_DATABASE', 'laravel'),
+        'username' => env('DB_USERNAME', 'root'),
+        'password' => env('DB_PASSWORD', ''),
+        'unix_socket' => env('DB_SOCKET', ''),
+        'charset' => env('DB_CHARSET', 'utf8mb4'),
+        'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
         'prefix' => '',
+        'prefix_indexes' => true,
+        'strict' => true,
+        'engine' => null,
+        'options' => extension_loaded('pdo_mysql') ? array_filter([
+            PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+        ]) : [],
     ],
 
 Обратите внимание, что в массив конфигурации были добавлены три ключа: `read`, `write` и `sticky`. Ключи `read` и `write` имеют значения массива, содержащие один ключ: `host`. Остальные параметры базы данных для соединений `read` и `write` будут объединены из основного массива конфигурации `mysql`.
@@ -272,6 +282,7 @@ driver://username:password@host:port/database?options
                 // $query->sql;
                 // $query->bindings;
                 // $query->time;
+                // $query->toRawSql();
             });
         }
     }
@@ -394,6 +405,20 @@ php artisan db:show --database=pgsql
 php artisan db:show --counts --views
 ```
 
+Кроме того, вы можете использовать следующие методы `Schema` для проверки вашей базы данных:
+
+    use Illuminate\Support\Facades\Schema;
+
+    $tables = Schema::getTables();
+    $views = Schema::getViews();
+    $columns = Schema::getColumns('users');
+    $indexes = Schema::getIndexes('users');
+    $foreignKeys = Schema::getForeignKeys('users');
+
+Если вы хотите проверить соединение с базой данных, которое не является соединением вашего приложения по умолчанию, вы можете использовать метод `connection`:
+
+    $columns = Schema::connection('sqlite')->getColumns('users');
+
 <a name="table-overview"></a>
 #### Обзор таблиц
 
@@ -414,7 +439,7 @@ php artisan db:table users
 php artisan db:monitor --databases=mysql,pgsql --max=100
 ```
 
-Одного планирования этой команды недостаточно для отправки уведомления о количестве открытых соединений. Когда команда обнаруживает базу данных с количеством открытых соединений, превышающим ваш порог, будет отправлено событие `DatabaseBusy`. Вы должны прослушивать это событие в файле `EventServiceProvider` вашего приложения, чтобы отправить уведомление вам или вашей команде разработки:
+Одного планирования этой команды недостаточно для отправки уведомления о количестве открытых соединений. Когда команда обнаруживает базу данных с количеством открытых соединений, превышающим ваш порог, будет отправлено событие `DatabaseBusy`. Вы должны прослушивать это событие в файле `AppServiceProvider` вашего приложения, чтобы отправить уведомление вам или вашей команде разработки:
 
 ```php
 use App\Notifications\DatabaseApproachingMaxConnections;
@@ -423,7 +448,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 
 /**
- * Зарегистрируйте любые другие события для вашего приложения.
+ * Запуск любых служб приложения.
  */
 public function boot(): void
 {
