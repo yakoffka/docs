@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: d8ab24c9a1724aa7ac413ee72f864049b90bba40
 ---
 
 # Laravel Passport
@@ -22,28 +22,17 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 <a name="installation"></a>
 ## Установка
 
-Для начала установите Passport через менеджер пакетов Composer:
+Вы можете установить Laravel Passport с помощью Artisan-команды `install:api`:
 
 ```shell
-composer require laravel/passport
+php artisan install:api --passport
 ```
 
-[Сервис-провайдер](/docs/{{version}}/providers) Passport регистрирует свой собственный каталог миграции базы данных, поэтому вам следует перенести свою базу данных после установки пакета. При миграции паспорта будут созданы таблицы, необходимые вашему приложению для хранения клиентов OAuth2 и токенов доступа:
+Эта команда опубликует и запустит миграцию базы данных для создания таблиц, необходимых вашему приложению для хранения клиентов OAuth2 и токенов доступа. Команда также создаст ключи шифрования, необходимые для создания токенов безопасного доступа.
 
-```shell
-php artisan migrate
-```
+Кроме того, эта команда спросит, хотите ли вы использовать UUID в качестве значения первичного ключа модели Passport `Client` вместо автоматического увеличения целых чисел.
 
-Затем вы должны выполнить Artisan-команду `passport:install`. Эта команда создаст ключи шифрования, необходимые для создания токенов безопасного доступа. Кроме того, команда создаст клиентов "personal access" и "password grant", которые будут использоваться для генерации токенов доступа:
-
-```shell
-php artisan passport:install
-```
-
-> [!NOTE]  
-> Если вы хотите использовать UUID в качестве значения первичного ключа модели Passport `Client` вместо автоматически увеличивающихся целых чисел, установите Passport, используя [the `uuids` option](#client-uuids).
-
-После выполнения команды `passport:install` добавьте [трейт](https://www.php.net/manual/ru/language.oop5.traits.php) `Laravel\Passport\HasApiTokens` в свою модель `App\Models\User`. Этот трейт предоставит вашей модели несколько вспомогательных методов, которые позволят вам проверить токен и области аутентифицированного пользователя. Если ваша модель уже использует трейт `Laravel\Sanctum\HasApiTokens`, вы можете его удалить:
+После запуска команды `install:api` добавьте трейт `Laravel\Passport\HasApiTokens` в вашу модель `App\Models\User`. Этот трейт предоставит вашей модели несколько вспомогательных методов, которые позволят вам проверять токен и области аутентифицированного пользователя:
 
     <?php
 
@@ -73,15 +62,6 @@ php artisan passport:install
         ],
     ],
 
-<a name="client-uuids"></a>
-#### Клиентские UUID
-
-Вы также можете запустить команду `passport:install` с опцией `--uuids`. Эта опция укажет Passport, что вы хотели бы использовать UUID вместо автоматически увеличивающихся целых чисел в качестве значений первичного ключа модели Passport `Client`. После выполнения команды `passport:install` с параметром `--uuids` вы получите дополнительные инструкции по отключению миграций по умолчанию для Passport:
-
-```shell
-php artisan passport:install --uuids
-```
-
 <a name="deploying-passport"></a>
 ### Развертывание Passport
 
@@ -91,10 +71,10 @@ php artisan passport:install --uuids
 php artisan passport:keys
 ```
 
-При необходимости вы можете указать путь, откуда должны быть загружены ключи Passport. Для этого вы можете использовать метод `Passport::loadKeysFrom`. Обычно этот метод следует вызывать из метода `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+При необходимости вы можете указать путь, откуда должны быть загружены ключи Passport. Для этого вы можете использовать метод `Passport::loadKeysFrom`. Обычно этот метод следует вызывать из метода `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложений.
      */
     public function boot(): void
     {
@@ -122,15 +102,6 @@ PASSPORT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
 -----END PUBLIC KEY-----"
 ```
 
-<a name="migration-customization"></a>
-### Настройка миграции
-
-Если вы не собираетесь использовать миграции Passport по умолчанию, вам следует вызвать метод `Passport::ignoreMigrations` в методе `register` вашего класса `App\Providers\AppServiceProvider`. Вы можете экспортировать миграции по умолчанию, используя Artisan-команду `vendor:publish`:
-
- ```shell
-php artisan vendor:publish --tag=passport-migrations
-```
-
 <a name="upgrading-passport"></a>
 ### Обновление Passport
 
@@ -142,7 +113,7 @@ php artisan vendor:publish --tag=passport-migrations
 <a name="client-secret-hashing"></a>
 ### Хеширование секретного ключа клиента
 
-Если вы хотите, чтобы секретные ключи клиента хешировались при хранении в базе данных, вы должны вызвать метод `Passport::hashClientSecrets` в методе `boot` класса `App\Providers\AuthServiceProvider`:
+Если вы хотите, чтобы секретные ключи клиента хешировались при хранении в базе данных, вы должны вызвать метод `Passport::hashClientSecrets` в методе `boot` класса `App\Providers\AppServiceProvider`:
 
     use Laravel\Passport\Passport;
 
@@ -153,10 +124,10 @@ php artisan vendor:publish --tag=passport-migrations
 <a name="token-lifetimes"></a>
 ### Срок жизни токена
 
-По умолчанию Passport выдает долговременные токены доступа, срок действия которых истекает через год. Если вы хотите настроить более длительный / более короткий срок жизни токена, вы можете использовать методы `tokensExpireIn`, `refreshTokensExpireIn` и `personalAccessTokensExpireIn`. Эти методы следует вызывать из метода `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+По умолчанию Passport выдает долговременные токены доступа, срок действия которых истекает через год. Если вы хотите настроить более длительный / более короткий срок жизни токена, вы можете использовать методы `tokensExpireIn`, `refreshTokensExpireIn` и `personalAccessTokensExpireIn`. Эти методы следует вызывать из метода `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложений.
      */
     public function boot(): void
     {
@@ -180,7 +151,7 @@ php artisan vendor:publish --tag=passport-migrations
         // ...
     }
 
-После определения модели вы можете указать Passport использовать вашу пользовательскую модель через класс `Laravel\Passport\Passport`. Как правило, вы должны сообщить Passport о ваших пользовательских моделях в методе `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+После определения модели вы можете указать Passport использовать вашу пользовательскую модель через класс `Laravel\Passport\Passport`. Как правило, вы должны сообщить Passport о ваших пользовательских моделях в методе `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     use App\Models\Passport\AuthCode;
     use App\Models\Passport\Client;
@@ -189,7 +160,7 @@ php artisan vendor:publish --tag=passport-migrations
     use App\Models\Passport\Token;
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложений.
      */
     public function boot(): void
     {
@@ -510,15 +481,11 @@ php artisan passport:purge --revoked
 php artisan passport:purge --expired
 ```
 
-Вы также можете настроить [запланированное задание](/docs/{{version}}/scheduling) в классе вашего приложения `App\Console\Kernel` для автоматического удаления токенов по расписанию:
+Вы также можете настроить [запланированное задание](/docs/{{version}}/scheduling) в файле вашего приложения `routes/console.php` для автоматического удаления токенов по расписанию:
 
-    /**
-     * Определите расписание приложения.
-     */
-    protected function schedule(Schedule $schedule): void
-    {
-        $schedule->command('passport:purge')->hourly();
-    }
+    use Laravel\Support\Facades\Schedule;
+
+    Schedule::command('passport:purge')->hourly();
 
 <a name="code-grant-pkce"></a>
 ## Предоставление кода авторизации с помощью PKCE
@@ -621,6 +588,16 @@ php artisan passport:client --public
 > Мы больше не рекомендуем использовать токены для предоставления пароля. Вместо этого вам следует выбрать [тип гаранта, который в настоящее время рекомендуется OAuth2 Server](https://oauth2.thephpleague.com/authorization-server/which-grant/).
 
 Предоставление пароля OAuth2 позволяет другим сторонним клиентам, таким как мобильное приложение, получать токен доступа, используя адрес электронной почты / имя пользователя и пароль. Это позволяет вам безопасно выдавать токены доступа своим основным клиентам, не требуя от пользователей прохождения всего потока перенаправления кода авторизации OAuth2.
+
+Чтобы включить предоставление пароля, вызовите метод `enablePasswordGrant` в методе `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
+
+    /**
+     * Запустите любые службы приложения.
+     */
+    public function boot(): void
+    {
+        Passport::enablePasswordGrant();
+    }
 
 <a name="creating-a-password-grant-client"></a>
 ### Создание токенов
@@ -733,10 +710,10 @@ php artisan passport:client --password
 > [!WARNING]  
 > Мы больше не рекомендуем использовать токены для предоставления пароля. Вместо этого вам следует выбрать [тип гаранта, который в настоящее время рекомендуется OAuth2 Server](https://oauth2.thephpleague.com/authorization-server/which-grant/).
 
-Неявное разрешение аналогично предоставлению кода авторизации; однако токен возвращается клиенту без обмена кодом авторизации. Это разрешение чаще всего используется для JavaScript или мобильных приложений, где учетные данные клиента не могут быть надежно сохранены. Чтобы включить разрешение, вызовите метод `enableImplicitGrant` в методе `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+Неявное разрешение аналогично предоставлению кода авторизации; однако токен возвращается клиенту без обмена кодом авторизации. Это разрешение чаще всего используется для JavaScript или мобильных приложений, где учетные данные клиента не могут быть надежно сохранены. Чтобы включить разрешение, вызовите метод `enableImplicitGrant` в методе `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложения.
      */
     public function boot(): void
     {
@@ -776,13 +753,15 @@ php artisan passport:client --password
 php artisan passport:client --client
 ```
 
-Далее, чтобы использовать этот тип разрешения, вы можете добавить посредника (middleware) `CheckClientCredentials` в свойство `$middlewareAliases` файла `app/Http/Kernel.php` вашего приложения:
+Далее, чтобы использовать этот тип разрешения, зарегистрируйте посредника (middleware) `CheckClientCredentials`. Вы можете определить псевдонимы промежуточного программного обеспечения в файле `bootstrap/app.php` вашего приложения:
 
     use Laravel\Passport\Http\Middleware\CheckClientCredentials;
 
-    protected $middlewareAliases = [
-        'client' => CheckClientCredentials::class,
-    ];
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'client' => CheckClientCredentials::class
+        ]);
+    })
 
 Затем назначьте посредника к маршруту:
 
@@ -971,10 +950,10 @@ axios.delete('/oauth/personal-access-tokens/' + tokenId);
 <a name="defining-scopes"></a>
 ### Определение областей
 
-Вы можете определить области своего API, используя метод `Passport::tokensCan` в методе `boot` класса `App\Providers\AuthServiceProvider` вашего приложения. Метод `tokensCan` принимает массив имен и описаний областей видимости. Описание области действия может быть любым, и оно будет отображаться для пользователей на экране утверждения авторизации:
+Вы можете определить области своего API, используя метод `Passport::tokensCan` в методе `boot` класса `App\Providers\AppServiceProvider` вашего приложения. Метод `tokensCan` принимает массив имен и описаний областей видимости. Описание области действия может быть любым, и оно будет отображаться для пользователей на экране утверждения авторизации:
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложения.
      */
     public function boot(): void
     {
@@ -987,7 +966,7 @@ axios.delete('/oauth/personal-access-tokens/' + tokenId);
 <a name="default-scope"></a>
 ### Области по-умолчанию
 
-Если клиент не запрашивает какие-либо определенные области, вы можете настроить свой сервер Passport для присоединения области (областей) по умолчанию к токену с помощью метода `setDefaultScope`. Как правило, вы должны вызывать этот метод из метода `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+Если клиент не запрашивает какие-либо определенные области, вы можете настроить свой сервер Passport для присоединения области (областей) по умолчанию к токену с помощью метода `setDefaultScope`. Как правило, вы должны вызывать этот метод из метода `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     use Laravel\Passport\Passport;
 
@@ -1033,10 +1012,17 @@ axios.delete('/oauth/personal-access-tokens/' + tokenId);
 <a name="checking-scopes"></a>
 ### Проверка областей
 
-Passport включает два посредника, которые могут использоваться для проверки подлинности входящего запроса с помощью токена, и для них предоставлена заданная область. Для начала добавьте следующие посредники в свойство `$middlewareAliases` вашего файла `app/Http/Kernel.php`:
+Passport включает в себя два посредника, которые можно использовать для проверки подлинности входящего запроса с помощью токена, которому предоставлена ​​заданная область действия. Для начала определите следующие псевдонимы посредников в файле `bootstrap/app.php` вашего приложения:
 
-    'scopes' => \Laravel\Passport\Http\Middleware\CheckScopes::class,
-    'scope' => \Laravel\Passport\Http\Middleware\CheckForAnyScope::class,
+    use Laravel\Passport\Http\Middleware\CheckForAnyScope;
+    use Laravel\Passport\Http\Middleware\CheckScopes;
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'scopes' => CheckScopes::class,
+            'scope' => CheckForAnyScope::class,
+        ]);
+    })
 
 <a name="check-for-all-scopes"></a>
 #### Проверка всех областей
@@ -1095,12 +1081,15 @@ Passport включает два посредника, которые могут
 
 При создании API может быть чрезвычайно полезно иметь возможность использовать собственный API из приложения JavaScript. Такой подход к разработке API позволяет вашему собственному приложению использовать тот же API, которым вы делитесь со всем миром. Один и тот же API может использоваться вашим веб-приложением, мобильными приложениями, сторонними приложениями и любыми SDK, которые вы можете публиковать в различных менеджерах пакетов.
 
-Как правило, если вы хотите использовать свой API из своего приложения JavaScript, вам необходимо вручную отправить токен доступа в приложение и передать его с каждым запросом в ваше приложение. Однако Passport включает посредник, который может справиться с этим за вас. Все, что вам нужно сделать, это добавить посредник `CreateFreshApiToken` в вашу группу посредников `web` в файле `app/Http/Kernel.php`:
+Как правило, если вы хотите использовать свой API из своего приложения JavaScript, вам необходимо вручную отправить токен доступа в приложение и передавать его с каждым запросом к вашему приложению. Однако Passport включает в себя посредника, которое может сделать это за вас. Все, что вам нужно сделать, это добавить посредника `CreateFreshApiToken` в группу посредников `web` в файле `bootstrap/app.php` вашего приложения:
 
-    'web' => [
-        // Другие посредники ...
-        \Laravel\Passport\Http\Middleware\CreateFreshApiToken::class,
-    ],
+    use Laravel\Passport\Http\Middleware\CreateFreshApiToken;
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->web(append: [
+            CreateFreshApiToken::class,
+        ]);
+    })
 
 > [!WARNING]
 > Вы должны убедиться, что посредник `CreateFreshApiToken` является последним в списке ваших посредников указанных ранее.
@@ -1115,10 +1104,10 @@ Passport включает два посредника, которые могут
 <a name="customizing-the-cookie-name"></a>
 #### Настройка имени Cookie
 
-При необходимости вы можете настроить имя файла cookie `laravel_token`, используя метод `Passport::cookie`. Обычно этот метод следует вызывать из метода `boot` класса `App\Providers\AuthServiceProvider` вашего приложения:
+При необходимости вы можете настроить имя файла cookie `laravel_token`, используя метод `Passport::cookie`. Обычно этот метод следует вызывать из метода `boot` класса `App\Providers\AppServiceProvider` вашего приложения:
 
     /**
-     * Регистрация сервисов аутентификации и авторизации.
+     * Запустите любые службы приложения.
      */
     public function boot(): void
     {
@@ -1136,56 +1125,82 @@ Passport включает два посредника, которые могут
 <a name="events"></a>
 ## События
 
-Passport вызывает события при выдаче токенов доступа и обновлении токенов. Вы можете использовать эти события для удаления или отмены других токенов доступа в вашей базе данных. При желании вы можете прикрепить слушателей к этим событиям в классе `App\Providers\EventServiceProvider` вашего приложения:
+Passport вызывает события при выдаче токенов доступа и обновлении токенов. Вы можете [прослушивать эти события](/docs/{{version}}/events), чтобы сократить или отозвать другие токены доступа в вашей базе данных:
 
-    /**
-     * Подписчики событий приложения.
-     *
-     * @var array
-     */
-    protected $listen = [
-        'Laravel\Passport\Events\AccessTokenCreated' => [
-            'App\Listeners\RevokeOldTokens',
-        ],
-
-        'Laravel\Passport\Events\RefreshTokenCreated' => [
-            'App\Listeners\PruneOldTokens',
-        ],
-    ];
+| Наименование события |
+| --- |
+| `Laravel\Passport\Events\AccessTokenCreated` |
+| `Laravel\Passport\Events\RefreshTokenCreated` |
 
 <a name="testing"></a>
 ## Тестирование
 
 Метод `actingAs` Passport может использоваться для указания аутентифицированного в данный момент пользователя, а также его областей действия. Первым аргументом, передаваемым методу `actingAs`, является экземпляр пользователя, а вторым - массив областей видимости, которые должны быть предоставлены токену пользователя:
 
-    use App\Models\User;
-    use Laravel\Passport\Passport;
+```php tab=Pest
+use App\Models\User;
+use Laravel\Passport\Passport;
 
-    public function test_servers_can_be_created(): void
-    {
-        Passport::actingAs(
-            User::factory()->create(),
-            ['create-servers']
-        );
+test('servers can be created', function () {
+    Passport::actingAs(
+        User::factory()->create(),
+        ['create-servers']
+    );
 
-        $response = $this->post('/api/create-server');
+    $response = $this->post('/api/create-server');
 
-        $response->assertStatus(201);
-    }
+    $response->assertStatus(201);
+});
+```
+
+```php tab=PHPUnit
+use App\Models\User;
+use Laravel\Passport\Passport;
+
+public function test_servers_can_be_created(): void
+{
+    Passport::actingAs(
+        User::factory()->create(),
+        ['create-servers']
+    );
+
+    $response = $this->post('/api/create-server');
+
+    $response->assertStatus(201);
+}
+```
 
 Метод `actingAsClient` Passport может использоваться для указания аутентифицированного в данный момент клиента, а также его областей. Первым аргументом, передаваемым методу `actingAsClient`, является экземпляр клиента, а вторым — массив областей видимости, которые должны быть предоставлены токену клиента:
 
-    use Laravel\Passport\Client;
-    use Laravel\Passport\Passport;
+```php tab=Pest
+use Laravel\Passport\Client;
+use Laravel\Passport\Passport;
 
-    public function test_orders_can_be_retrieved(): void
-    {
-        Passport::actingAsClient(
-            Client::factory()->create(),
-            ['check-status']
-        );
+test('orders can be retrieved', function () {
+    Passport::actingAsClient(
+        Client::factory()->create(),
+        ['check-status']
+    );
 
-        $response = $this->get('/api/orders');
+    $response = $this->get('/api/orders');
 
-        $response->assertStatus(200);
-    }
+    $response->assertStatus(200);
+});
+```
+
+```php tab=PHPUnit
+use Laravel\Passport\Client;
+use Laravel\Passport\Passport;
+
+public function test_orders_can_be_retrieved(): void
+{
+    Passport::actingAsClient(
+        Client::factory()->create(),
+        ['check-status']
+    );
+
+    $response = $this->get('/api/orders');
+
+    $response->assertStatus(200);
+}
+```
