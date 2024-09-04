@@ -1,5 +1,5 @@
 ---
-git: ce8eb815edf2b9ee3529c9ee1f6a5a2ca9600fbf
+git: af8926466f6afe7dd8415d751c9c95cda7aa1965
 ---
 
 
@@ -105,6 +105,7 @@ php artisan pennant:feature NewApi
 
 namespace App\Features;
 
+use App\Models\User;
 use Illuminate\Support\Lottery;
 
 class NewApi
@@ -123,7 +124,16 @@ class NewApi
 }
 ```
 
-> [!NOTE] Классы функций разрешаются через [контейнер](/docs/{{version}}/container), поэтому при необходимости вы можете внедрять зависимости в конструктор класса функции.
+Если вы хотите вручную разрешить экземпляр функции на основе класса, вы можете вызвать метод `instance` на фасаде `Feature`:
+
+```php
+use Illuminate\Support\Facades\Feature;
+
+$instance = Feature::instance(NewApi::class);
+```
+
+> [!NOTE]
+> Классы функций разрешаются через [контейнер](/docs/{{version}}/container), поэтому при необходимости вы можете внедрять зависимости в конструктор класса функции.
 
 #### Настройка хранимого имени функции
 
@@ -384,6 +394,78 @@ public function boot(): void
 }
 ```
 
+<a name="intercepting-feature-checks"></a>
+### Перехват проверок свойства
+
+Иногда может быть полезно выполнить некоторые проверки в памяти перед получением сохраненного значения данного свойства. Представьте, что вы разрабатываете новый API на основе флага свойства и хотите иметь возможность отключить новый API, не теряя ни одного из разрешенных значений свойства в хранилище. Если вы заметили ошибку в новом API, вы можете легко отключить его для всех, кроме членов внутренней команды, исправить ошибку, а затем повторно включить новый API для пользователей, которые ранее имели доступ к этому свойству.
+
+Этого можно добиться с помощью метода `before` [class-based Feature's](#class-based-features). Если метод `before` присутствует, он всегда запускается в памяти перед извлечением значения из хранилища. Если из метода возвращается значение, отличное от null, оно будет использоваться вместо сохраненного значения функции на время запроса:
+
+```php
+<?php
+
+namespace App\Features;
+
+use App\Models\User;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Lottery;
+
+class NewApi
+{
+    /**
+     * Run an always-in-memory check before the stored value is retrieved.
+     */
+    public function before(User $user): mixed
+    {
+        if (Config::get('features.new-api.disabled')) {
+            return $user->isInternalTeamMember();
+        }
+    }
+
+    /**
+     * Resolve the feature's initial value.
+     */
+    public function resolve(User $user): mixed
+    {
+        return match (true) {
+            $user->isInternalTeamMember() => true,
+            $user->isHighTrafficCustomer() => false,
+            default => Lottery::odds(1 / 100),
+        };
+    }
+}
+```
+
+Вы также можете использовать эту функцию, чтобы запланировать глобальное развертывание функции, которая ранее находилась за флажком свойства:
+
+```php
+<?php
+
+namespace App\Features;
+
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
+
+class NewApi
+{
+    /**
+     * Run an always-in-memory check before the stored value is retrieved.
+     */
+    public function before(User $user): mixed
+    {
+        if (Config::get('features.new-api.disabled')) {
+            return $user->isInternalTeamMember();
+        }
+
+        if (Carbon::parse(Config::get('features.new-api.rollout-date'))->isPast()) {
+            return true;
+        }
+    }
+
+    // ...
+}
+```
+
 <a name="in-memory-cache"></a>
 ### Кэш в памяти
 
@@ -432,7 +514,7 @@ Feature::define('billing-v2', function (Team $team) {
 
 ```php
 if (Feature::for($user->team)->active('billing-v2')) {
-    return redirect()->to('/billing/v2');
+    return redirect('/billing/v2');
 }
 
 // ...
@@ -588,7 +670,8 @@ $color = Feature::value('purchase-button');
 @endfeature
 ```
 
-> [!NOTE] При использовании расширенных значений важно знать, что функция считается "активной", когда она имеет любое значение, отличное от `false`.
+> [!NOTE]
+> При использовании расширенных значений важно знать, что функция считается "активной", когда она имеет любое значение, отличное от `false`.
 
 При вызове [условного метода `when`](#conditional-execution), расширенное значение функции будет предоставлено первому замыканию:
 
@@ -706,6 +789,12 @@ Feature::for($users)->loadMissing([
 ]);
 ```
 
+Вы можете загрузить все определенные функции, используя метод loadAll:
+
+```php
+Feature::for($user)->loadAll();
+```
+
 <a name="updating-values"></a>
 ## Обновление значений
 
@@ -757,7 +846,8 @@ Feature::activateForEveryone('purchase-button', 'seafoam-green');
 Feature::deactivateForEveryone('new-api');
 ```
 
-> [!NOTE] Это обновит только сохраненные значения разрешенных функций, которые были сохранены драйвером хранения Pennant. Вам также нужно будет обновить определение функции в вашем приложении.
+> [!NOTE]
+> Это обновит только сохраненные значения разрешенных функций, которые были сохранены драйвером хранения Pennant. Вам также нужно будет обновить определение функции в вашем приложении.
 
 <a name="purging-features"></a>
 ### Очистка функций
@@ -819,7 +909,17 @@ Feature::define('purchase-button', fn () => Arr::random([
 
 Чтобы изменить возвращаемое значение функции в ваших тестах, вы можете переопределить функцию в начале теста. Следующий тест всегда будет успешным, даже если реализация `Arr::random()` все еще присутствует в сервис-провайдере:
 
-```php
+```php tab=Pest
+use Laravel\Pennant\Feature;
+
+test('it can control feature values', function () {
+    Feature::define('purchase-button', 'seafoam-green');
+
+    expect(Feature::value('purchase-button'))->toBe('seafoam-green');
+});
+```
+
+```php tab=PHPUnit
 use Laravel\Pennant\Feature;
 
 public function test_it_can_control_feature_values()
@@ -832,7 +932,17 @@ public function test_it_can_control_feature_values()
 
 Тот же подход можно использовать и для функций на основе классов:
 
-```php
+```php tab=Pest
+use Laravel\Pennant\Feature;
+
+test('it can control feature values', function () {
+    Feature::define(NewApi::class, true);
+
+    expect(Feature::value(NewApi::class))->toBeTrue();
+});
+```
+
+```php tab=PHPUnit
 use App\Features\NewApi;
 use Laravel\Pennant\Feature;
 
@@ -949,39 +1059,82 @@ class AppServiceProvider extends ServiceProvider
 
 Pennant отправляет различные события, которые могут быть полезны при отслеживании флагов функций в вашем приложении.
 
-### `Laravel\Pennant\Events\RetrievingKnownFeature`
+### `Laravel\Pennant\Events\FeatureRetrieved`
 
-Это событие отправляется при первом получении известной функции во время запроса для определенной области. Это событие может быть полезно для создания и отслеживания метрик для флагов функций, которые используются в вашем приложении.
+Это событие отправляется всякий раз, когда [проверяется функция](#checking-features). Это событие может быть полезно для создания и отслеживания показателей использования флага функции во всем приложении.
 
-### `Laravel\Pennant\Events\RetrievingUnknownFeature`
+### `Laravel\Pennant\Events\FeatureResolved`
 
-Это событие отправляется при первом получении неизвестной функции во время запроса для определенной области. Это событие может быть полезно, если вы намеревались удалить флаг функции, но случайно оставили некоторые упоминания о нем в вашем приложении.
+Это событие отправляется при первом разрешении значения функции для определенной области.
 
-Например, может быть полезным прослушивать это событие и `отчет` или генерировать исключение, когда оно возникает:
+### `Laravel\Pennant\Events\UnknownFeatureResolved`
+
+Это событие отправляется при первом разрешении неизвестной функции для определенной области. Прослушивание этого события может быть полезно, если вы намеревались удалить флаг функции, но случайно оставили на него случайные ссылки во всем приложении:
 
 ```php
 <?php
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
-use Laravel\Pennant\Events\RetrievingUnknownFeature;
+use Illuminate\Support\Facades\Log;
+use Laravel\Pennant\Events\UnknownFeatureResolved;
 
-class EventServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
 {
     /**
-     * Register any other events for your application.
+     * Bootstrap any application services.
      */
     public function boot(): void
     {
-        Event::listen(function (RetrievingUnknownFeature $event) {
-            report("Resolving unknown feature [{$event->feature}].");
+        Event::listen(function (UnknownFeatureResolved $event) {
+            Log::error("Resolving unknown feature [{$event->feature}].");
         });
     }
 }
 ```
 
-### `Laravel\Pennant\Events\DynamicallyDefiningFeature`
+### `Laravel\Pennant\Events\DynamicallyRegisteringFeatureClass`
 
-Это событие отправляется, когда функция на основе класса впервые динамически проверяется во время запроса.
+Это событие отправляется, когда [функция на основе класса](#class-based-features) динамически проверяется в первый раз во время запроса.
+
+### `Laravel\Pennant\Events\UnexpectedNullScopeEncountered`
+
+Это событие отправляется, когда область действия `null` передается определению функции, которая [не поддерживает null](#nullable-scope).
+
+Эта ситуация корректно обрабатывается, и функция возвращает `false`. Однако, если вы хотите отказаться от корректного поведения этой функции по умолчанию, вы можете зарегистрировать прослушиватель этого события в методе `boot` вашего приложения `AppServiceProvider`:
+
+```php
+use Illuminate\Support\Facades\Log;
+use Laravel\Pennant\Events\UnexpectedNullScopeEncountered;
+
+/**
+ * Bootstrap any application services.
+ */
+public function boot(): void
+{
+    Event::listen(UnexpectedNullScopeEncountered::class, fn () => abort(500));
+}
+
+```
+
+### `Laravel\Pennant\Events\FeatureUpdated`
+
+Это событие отправляется при обновлении функции для области, обычно путем вызова `activate` или `deactivate`.
+
+### `Laravel\Pennant\Events\FeatureUpdatedForAllScopes`
+
+Это событие отправляется при обновлении функции для всех областей, обычно путем вызова `activateForEveryone` или `deactivateForEveryone`.
+
+### `Laravel\Pennant\Events\FeatureDeleted`
+
+Это событие отправляется при удалении функции для области, обычно путем вызова `forget`.
+
+### `Laravel\Pennant\Events\FeaturesPurged`
+
+Это событие отправляется при очистке определенных функций.
+
+### `Laravel\Pennant\Events\AllFeaturesPurged`
+
+Это событие отправляется при очистке всех функций.
