@@ -1,5 +1,5 @@
 ---
-git: c896b9b09d1cd96e5c93afcc967ed7b636250074
+git: 0d2416ba760b34f142688b853c9b6b7817de12da
 ---
 
 # Коллекции
@@ -74,9 +74,11 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
  <div class="docs-column-list" markdown="1">
 
+- [`after`](#method-after)
 - [`all()`](#method-all)
 - [`average()`](#method-average)
 - [`avg()`](#method-avg)
+- [`before`](#method-before)
 - [`chunk()`](#method-chunk)
 - [`chunkWhile()`](#method-chunkwhile)
 - [`collapse()`](#method-collapse)
@@ -141,6 +143,7 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 - [`mergeRecursive()`](#method-mergerecursive)
 - [`min()`](#method-min)
 - [`mode()`](#method-mode)
+- [`multiply`](#method-multiply)
 - [`nth()`](#method-nth)
 - [`only()`](#method-only)
 - [`pad()`](#method-pad)
@@ -222,9 +225,39 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
  </div>
 
+<a name="method-listing"></a>
 ## Список методов
 
+<a name="method-after"></a>
+#### `after()`
 
+Метод `after` возвращает элемент после данного элемента. `null` возвращается, если данный элемент не найден или является последним элементом:
+
+    $collection = collect([1, 2, 3, 4, 5]);
+
+    $collection->after(3);
+
+    // 4
+
+    $collection->after(5);
+
+    // null
+
+Этот метод ищет данный элемент, используя «свободное» сравнение, то есть строка, содержащая целочисленное значение, будет считаться равной целому числу того же значения. Чтобы использовать «строгое» сравнение, вы можете предоставить методу аргумент `strict`:
+
+    collect([2, 4, 6, 8])->after('4', strict: true);
+
+    // null
+
+В качестве альтернативы вы можете предоставить собственное замыкание для поиска первого элемента, который проходит заданный тест на истинность:
+
+    collect([2, 4, 6, 8])->after(function (int $item, int $key) {
+        return $item > 5;
+    });
+
+    // 8
+
+<a name="method-all"></a>
 #### `all()`
 
 Метод `all` возвращает базовый массив, представленный коллекцией:
@@ -256,6 +289,31 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
     // 2
 
+<a name="method-before"></a>
+#### `before()`
+
+Метод `before` является противоположностью метода [`after`](#method-after). Он возвращает элемент перед данным элементом. `null` возвращается, если данный элемент не найден или является первым элементом:
+
+    $collection = collect([1, 2, 3, 4, 5]);
+
+    $collection->before(3);
+
+    // 2
+
+    $collection->before(1);
+
+    // null
+
+    collect([2, 4, 6, 8])->before('4', strict: true);
+
+    // null
+
+    collect([2, 4, 6, 8])->before(function (int $item, int $key) {
+        return $item > 5;
+    });
+
+    // 4
+
 <a name="method-chunk"></a>
 #### `chunk()`
 
@@ -269,7 +327,7 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
     // [[1, 2, 3, 4], [5, 6, 7]]
 
-Этот метод особенно полезен в [шаблонах](/docs/{{version}}/views) при работе с сеткой, такой как [Bootstrap](https://getbootstrap.com/docs/4.1/layout/grid/). Например, представьте, что у вас есть коллекция моделей [Eloquent](/docs/{{version}}/eloquent), которые вы хотите отобразить в сетке:
+Этот метод особенно полезен в [шаблонах](/docs/{{version}}/views) при работе с сеткой, такой как [Bootstrap](https://getbootstrap.com/docs/5.3/layout/grid/). Например, представьте, что у вас есть коллекция моделей [Eloquent](/docs/{{version}}/eloquent), которые вы хотите отобразить в сетке:
 
 ```blade
 @foreach ($products->chunk(3) as $chunk)
@@ -984,11 +1042,15 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
     $collection = collect(['name' => 'taylor', 'framework' => 'laravel']);
 
+    // Забыть один ключ...
     $collection->forget('name');
 
-    $collection->all();
-
     // ['framework' => 'laravel']
+
+    // Забыть несколько ключей...
+    $collection->forget(['name', 'framework']);
+
+    // []
 
 > [!WARNING]
 > В отличие от большинства других методов коллекции, `forget` модифицирует коллекцию.
@@ -1602,6 +1664,29 @@ git: c896b9b09d1cd96e5c93afcc967ed7b636250074
 
     // [1, 2]
 
+<a name="method-multiply"></a>
+#### `multiply()`
+
+Метод `multiply` создает указанное количество копий всех элементов коллекции:
+
+```php
+$users = collect([
+    ['name' => 'User #1', 'email' => 'user1@example.com'],
+    ['name' => 'User #2', 'email' => 'user2@example.com'],
+])->multiply(3);
+
+/*
+    [
+        ['name' => 'User #1', 'email' => 'user1@example.com'],
+        ['name' => 'User #2', 'email' => 'user2@example.com'],
+        ['name' => 'User #1', 'email' => 'user1@example.com'],
+        ['name' => 'User #2', 'email' => 'user2@example.com'],
+        ['name' => 'User #1', 'email' => 'user1@example.com'],
+        ['name' => 'User #2', 'email' => 'user2@example.com'],
+    ]
+*/
+```
+
 <a name="method-nth"></a>
 #### `nth()`
 
@@ -1997,7 +2082,6 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
 
     // 4264
 
-
 <a name="method-reduce-spread"></a>
 #### `reduceSpread()`
 
@@ -2103,7 +2187,7 @@ $percentage = $collection->percentage(fn ($value) => $value === 1, precision: 3)
 
 Поиск выполняется с использованием «гибкого» сравнения, то есть строка с целым значением будет считаться равной целому числу того же значения. Чтобы использовать «жесткое» сравнение, передайте `true` в качестве второго аргумента метода:
 
-    collect([2, 4, 6, 8])->search('4', $strict = true);
+    collect([2, 4, 6, 8])->search('4', strict: true);
 
     // false
 
@@ -3327,7 +3411,6 @@ $users->select(['name', 'role']);
         ]
     */
 
-
 <a name="method-wrap"></a>
 #### `wrap()`
 
@@ -3642,6 +3725,22 @@ $users->select(['name', 'role']);
     // 1
     // 2
     // 3
+
+<a name="method-throttle"></a>
+#### `throttle()`
+
+Метод `throttle` будет регулировать ленивую коллекцию таким образом, чтобы каждое значение возвращалось через указанное количество секунд. Этот метод особенно полезен в ситуациях, когда вы можете взаимодействовать с внешними API, которые ограничивают скорость входящих запросов:
+
+```php
+use App\Models\User;
+
+User::where('vip', true)
+    ->cursor()
+    ->throttle(seconds: 1)
+    ->each(function (User $user) {
+        // Call external API...
+    });
+```
 
 <a name="method-remember"></a>
 #### `remember()`
