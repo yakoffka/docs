@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 87c1dc3bbb78949d35a1af957ba76c4469490baa
 ---
 
 # Отправка электронной почты
@@ -8,9 +8,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 <a name="introduction"></a>
 ## Введение
 
-Отправка электронной почты не должна быть сложной.
-Laravel предлагает чистый и простой почтовый API на базе популярного компонента [Symfony Mailer](https://symfony.com/doc/6.2/mailer.html).
-Laravel и Symfony Mailer обеспечены драйверами для отправки электронной почты через SMTP, Mailgun, Postmark, Amazon SES и `sendmail`, что позволяет быстро начать отправку почты через локальный или облачный сервис по вашему выбору.
+Отправка электронной почты не должна быть сложной. Laravel предлагает чистый и простой почтовый API на базе популярного компонента [Symfony Mailer](https://symfony.com/doc/7.0/mailer.html). Laravel и Symfony Mailer обеспечены драйверами для отправки электронной почты через SMTP, Mailgun, Postmark, Amazon SES и `sendmail`, что позволяет быстро начать отправку почты через локальный или облачный сервис по вашему выбору.
 
 <a name="configuration"></a>
 ### Конфигурирование
@@ -22,7 +20,7 @@ Laravel и Symfony Mailer обеспечены драйверами для от�
 <a name="driver-prerequisites"></a>
 ### Требования к драйверу и транспорту
 
-Драйверы на основе API, такие, как Mailgun и Postmark, часто проще в использовании и быстрее, чем отправка почты через SMTP-серверы. По возможности мы рекомендуем использовать один из этих драйверов.
+Драйверы на основе API, такие, как Mailgun, Postmark, Resend и MailerSend часто проще в использовании и быстрее, чем отправка почты через SMTP-серверы. По возможности мы рекомендуем использовать один из этих драйверов.
 
 <a name="mailgun-driver"></a>
 #### Драйвер Mailgun
@@ -33,12 +31,22 @@ Laravel и Symfony Mailer обеспечены драйверами для от�
 composer require symfony/mailgun-mailer symfony/http-client
 ```
 
-Затем установите опцию `default` в конфигурационном файле `config/mail.php` вашего приложения в значение `mailgun`. После настройки основного почтового отправителя вашего приложения убедитесь, что конфигурационный файл `config/services.php` содержит следующие параметры:
+Затем установите опцию `default` в конфигурационном файле `config/mail.php` вашего приложения в значение `mailgun` и добавьте следующий массив конфигурации в ваш массив `mailers`:
 
     'mailgun' => [
         'transport' => 'mailgun',
+        // 'client' => [
+        //     'timeout' => 5,
+        // ],
+    ],
+
+После настройки почтовой программы вашего приложения по умолчанию добавьте следующие параметры в файл конфигурации `config/services.php`:
+
+    'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),
+        'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
+        'scheme' => 'https',
     ],
 
 Если вы не используете [регион Mailgun](https://documentation.mailgun.com/en/latest/api-intro.html#mailgun-regions) США, то вы можете определить конечную точку своего региона в конфигурации файла `services`:
@@ -47,12 +55,13 @@ composer require symfony/mailgun-mailer symfony/http-client
         'domain' => env('MAILGUN_DOMAIN'),
         'secret' => env('MAILGUN_SECRET'),
         'endpoint' => env('MAILGUN_ENDPOINT', 'api.eu.mailgun.net'),
+        'scheme' => 'https',
     ],
 
 <a name="postmark-driver"></a>
 #### Драйвер Postmark
 
-Чтобы использовать драйвер Postmark, установите пакет Symfony's Postmark Mailer через Composer:
+Чтобы использовать драйвер [Postmark](https://postmarkapp.com/), установите пакет Symfony's Postmark Mailer через Composer:
 
 ```shell
 composer require symfony/postmark-mailer symfony/http-client
@@ -69,9 +78,27 @@ composer require symfony/postmark-mailer symfony/http-client
     'postmark' => [
         'transport' => 'postmark',
         'message_stream_id' => env('POSTMARK_MESSAGE_STREAM_ID'),
+        // 'client' => [
+        //     'timeout' => 5,
+        // ],
     ],
 
 Таким образом, вы также можете настроить несколько почтовых программ Postmark с разными потоками сообщений.
+
+<a name="resend-driver"></a>
+#### Драйвер Resend
+
+Чтобы использовать драйвер [Resend](https://resend.com/), установите PHP SDK Resend через Composer:
+
+```shell
+composer require resend/resend-php
+```
+
+Затем установите для параметра `default` в файле конфигурации вашего приложения `config/mail.php` значение `resend`. После настройки почтовой программы вашего приложения по умолчанию убедитесь, что ваш файл конфигурации `config/services.php` содержит следующие параметры:
+
+    'resend' => [
+        'key' => env('RESEND_KEY'),
+    ],
 
 <a name="ses-driver"></a>
 #### Драйвер SES
@@ -98,6 +125,22 @@ composer require aws/aws-sdk-php
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
         'token' => env('AWS_SESSION_TOKEN'),
     ],
+
+Чтобы взаимодействовать с [функциями управления подпиской](https://docs.aws.amazon.com/ses/latest/dg/sending-email-subscription-management.html) SES, вы можете вернуть заголовок `X-Ses-List-Management-Options` в массиве, возвращаемом методом [`headers`](#headers) почтового сообщения:
+
+```php
+/**
+ * Get the message headers.
+ */
+public function headers(): Headers
+{
+    return new Headers(
+        text: [
+            'X-Ses-List-Management-Options' => 'contactListName=MyContactList;topicName=MyTopic',
+        ],
+    );
+}
+```
 
 Если вы хотите определить [дополнительные параметры](https://docs.aws.amazon.com/aws-sdk-php/v3/api/api-sesv2-2019-09-27.html#sendemail), которые Laravel должен передать методу `SendEmail` AWS SDK при отправке сообщения электронной почты, вы можете определить массив `options` в конфигурации `ses`:
 
@@ -130,6 +173,14 @@ MAIL_FROM_ADDRESS=app@yourdomain.com
 MAIL_FROM_NAME="Имя приложения"
 
 MAILERSEND_API_KEY=ваш-ключ-api
+```
+
+Наконец, добавьте MailerSend в массив `mailers` в файле конфигурации вашего приложения `config/mail.php`:
+
+```php
+'mailersend' => [
+    'transport' => 'mailersend',
+],
 ```
 
 Для получения дополнительной информации о MailerSend, включая инструкции по использованию хостинга шаблонов, обратитесь к [документации по драйверу MailerSend](https://github.com/mailersend/mailersend-laravel-driver#usage).
@@ -749,10 +800,10 @@ This is the panel content.
 
 ```blade
 <x-mail::table>
-| Laravel       | Table         | Example  |
-| ------------- |:-------------:| --------:|
-| Col 2 is      | Centered      | $10      |
-| Col 3 is      | Right-Aligned | $20      |
+| Laravel       | Table         | Example       |
+| ------------- | :-----------: | ------------: |
+| Col 2 is      | Centered      | $10           |
+| Col 3 is      | Right-Aligned | $20           |
 </x-mail::table>
 ```
 
@@ -989,37 +1040,72 @@ Laravel предоставляет разнообразные методы дл�
 
 Как и следовало ожидать, утверждения «HTML» утверждают, что HTML-версия вашего почтового сообщения содержит переданную строку, в то время как утверждения «текст» утверждают, что текстовая версия вашего почтового сообщения содержит переданную строку:
 
-    use App\Mail\InvoicePaid;
-    use App\Models\User;
+```php tab=Pest
+use App\Mail\InvoicePaid;
+use App\Models\User;
 
-    public function test_mailable_content(): void
-    {
-        $user = User::factory()->create();
+test('mailable content', function () {
+    $user = User::factory()->create();
 
-        $mailable = new InvoicePaid($user);
+    $mailable = new InvoicePaid($user);
 
-        $mailable->assertFrom('jeffrey@example.com');
-        $mailable->assertTo('taylor@example.com');
-        $mailable->assertHasCc('abigail@example.com');
-        $mailable->assertHasBcc('victoria@example.com');
-        $mailable->assertHasReplyTo('tyler@example.com');
-        $mailable->assertHasSubject('Invoice Paid');
-        $mailable->assertHasTag('example-tag');
-        $mailable->assertHasMetadata('key', 'value');
+    $mailable->assertFrom('jeffrey@example.com');
+    $mailable->assertTo('taylor@example.com');
+    $mailable->assertHasCc('abigail@example.com');
+    $mailable->assertHasBcc('victoria@example.com');
+    $mailable->assertHasReplyTo('tyler@example.com');
+    $mailable->assertHasSubject('Invoice Paid');
+    $mailable->assertHasTag('example-tag');
+    $mailable->assertHasMetadata('key', 'value');
 
-        $mailable->assertSeeInHtml($user->email);
-        $mailable->assertSeeInHtml('Invoice Paid');
-        $mailable->assertSeeInOrderInHtml(['Invoice Paid', 'Thanks']);
+    $mailable->assertSeeInHtml($user->email);
+    $mailable->assertSeeInHtml('Invoice Paid');
+    $mailable->assertSeeInOrderInHtml(['Invoice Paid', 'Thanks']);
 
-        $mailable->assertSeeInText($user->email);
-        $mailable->assertSeeInOrderInText(['Invoice Paid', 'Thanks']);
+    $mailable->assertSeeInText($user->email);
+    $mailable->assertSeeInOrderInText(['Invoice Paid', 'Thanks']);
 
-        $mailable->assertHasAttachment('/path/to/file');
-        $mailable->assertHasAttachment(Attachment::fromPath('/path/to/file'));
-        $mailable->assertHasAttachedData($pdfData, 'name.pdf', ['mime' => 'application/pdf']);
-        $mailable->assertHasAttachmentFromStorage('/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
-        $mailable->assertHasAttachmentFromStorageDisk('s3', '/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
-    }
+    $mailable->assertHasAttachment('/path/to/file');
+    $mailable->assertHasAttachment(Attachment::fromPath('/path/to/file'));
+    $mailable->assertHasAttachedData($pdfData, 'name.pdf', ['mime' => 'application/pdf']);
+    $mailable->assertHasAttachmentFromStorage('/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
+    $mailable->assertHasAttachmentFromStorageDisk('s3', '/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
+});
+```
+
+```php tab=PHPUnit
+use App\Mail\InvoicePaid;
+use App\Models\User;
+
+public function test_mailable_content(): void
+{
+    $user = User::factory()->create();
+
+    $mailable = new InvoicePaid($user);
+
+    $mailable->assertFrom('jeffrey@example.com');
+    $mailable->assertTo('taylor@example.com');
+    $mailable->assertHasCc('abigail@example.com');
+    $mailable->assertHasBcc('victoria@example.com');
+    $mailable->assertHasReplyTo('tyler@example.com');
+    $mailable->assertHasSubject('Invoice Paid');
+    $mailable->assertHasTag('example-tag');
+    $mailable->assertHasMetadata('key', 'value');
+
+    $mailable->assertSeeInHtml($user->email);
+    $mailable->assertSeeInHtml('Invoice Paid');
+    $mailable->assertSeeInOrderInHtml(['Invoice Paid', 'Thanks']);
+
+    $mailable->assertSeeInText($user->email);
+    $mailable->assertSeeInOrderInText(['Invoice Paid', 'Thanks']);
+
+    $mailable->assertHasAttachment('/path/to/file');
+    $mailable->assertHasAttachment(Attachment::fromPath('/path/to/file'));
+    $mailable->assertHasAttachedData($pdfData, 'name.pdf', ['mime' => 'application/pdf']);
+    $mailable->assertHasAttachmentFromStorage('/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
+    $mailable->assertHasAttachmentFromStorageDisk('s3', '/path/to/file', 'name.pdf', ['mime' => 'application/pdf']);
+}
+```
 
 <a name="testing-mailable-sending"></a>
 ### Тестирование отправки почтовых сообщений
@@ -1028,7 +1114,41 @@ Laravel предоставляет разнообразные методы дл�
 
 Вы можете использовать метод `fake` фасада `Mail`, чтобы предотвратить отправку электронных писем. После вызова метода `fake` фасада `Mail`, вы можете утверждать, что было указано отправить классы для отправки электронной почты пользователям и даже проверять данные, которые были получены классами для отправки электронной почты:
 
-```php
+```php tab=Pest
+<?php
+
+use App\Mail\OrderShipped;
+use Illuminate\Support\Facades\Mail;
+
+test('orders can be shipped', function () {
+    Mail::fake();
+
+    // Выполните доставку заказа...
+
+    // Утверждение, что ни одно письмо не было отправлено...
+    Mail::assertNothingSent();
+
+    // Утверждение, что было отправлено одно письмо...
+    Mail::assertSent(OrderShipped::class);
+
+    // Утверждение, что было отправлено два письма...
+    Mail::assertSent(OrderShipped::class, 2);
+
+    // Утверждение, что почтовое сообщение было отправлено на адрес электронной почты...
+    Mail::assertSent(OrderShipped::class, 'example@laravel.com');
+
+    // Утверждение, что почтовое сообщение было отправлено на несколько адресов электронной почты...
+    Mail::assertSent(OrderShipped::class, ['example@laravel.com', '...']);
+
+    // Утверждение, что почтовое сообщение не было отправлено...
+    Mail::assertNotSent(AnotherMailable::class);
+
+    // Утверждение, что всего было отправлено 3 почтовых сообщения...
+    Mail::assertSentCount(3);
+});
+```
+
+```php tab=PHPUnit
 <?php
 
 namespace Tests\Feature;
@@ -1053,6 +1173,12 @@ class ExampleTest extends TestCase
 
         // Утверждение, что было отправлено два письма...
         Mail::assertSent(OrderShipped::class, 2);
+
+        // Утверждение, что почтовое сообщение было отправлено на адрес электронной почты...
+        Mail::assertSent(OrderShipped::class, 'example@laravel.com');
+
+        // Утверждение, что почтовое сообщение было отправлено на несколько адресов электронной почты...
+        Mail::assertSent(OrderShipped::class, ['example@laravel.com', '...']);
 
         // Утверждение, что другое письмо не было отправлено...
         Mail::assertNotSent(AnotherMailable::class);
@@ -1166,27 +1292,21 @@ Mail::assertNotOutgoing(function (OrderShipped $mail) use ($order) {
 <a name="events"></a>
 ## События
 
-Laravel запускает два события в процессе отправки почтовых сообщений. Событие `MessageSending` запускается перед отправкой сообщения, а событие `MessageSent` запускается после того, как сообщение было отправлено. Помните, что эти события запускаются, когда почта *отправляется*, а не когда она ставится в очередь. Вы можете зарегистрировать слушатели для этого события в вашем поставщике `App\Providers\EventServiceProvider`:
+Laravel отправляет два события при отправке почтовых сообщений. Событие `MessageSending` отправляется до отправки сообщения, а событие `MessageSent` отправляется после отправки сообщения. Помните, что эти события отправляются при **отправке** почты, а не при ее постановке в очередь. Вы можете создать [слушателей](/docs/{{version}}/events) для этих событий в своем приложении:
 
-    use App\Listeners\LogSendingMessage;
-    use App\Listeners\LogSentMessage;
     use Illuminate\Mail\Events\MessageSending;
-    use Illuminate\Mail\Events\MessageSent;
+    // use Illuminate\Mail\Events\MessageSent;
 
-    /**
-     * Карта слушателей событий приложения.
-     *
-     * @var array
-     */
-    protected $listen = [
-        MessageSending::class => [
-            LogSendingMessage::class,
-        ],
-
-        MessageSent::class => [
-            LogSentMessage::class,
-        ],
-    ];
+    class LogMessage
+    {
+        /**
+         * Handle the given event.
+         */
+        public function handle(MessageSending $event): void
+        {
+            // ...
+        }
+    }
 
 <a name="custom-transports"></a>
 ## Пользовательские транспорты
