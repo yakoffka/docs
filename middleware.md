@@ -228,7 +228,6 @@ Laravel включает в себя предопределенные групп
 | -------------------------------------------------- |
 | `Illuminate\Routing\Middleware\SubstituteBindings` |
 
-If you would like to append or prepend middleware to these groups, you may use the `web` and `api` methods within your application's `bootstrap/app.php` file. The `web` and `api` methods are convenient alternatives to the `appendToGroup` method:
 Если вы хотите добавить или добавить посредника к этим группам, вы можете использовать методы `web` и `api` в файле `bootstrap/app.php` вашего приложения. Методы `web` и `api` являются удобной альтернативой методу `appendToGroup`:
 
     use App\Http\Middleware\EnsureTokenIsValid;
