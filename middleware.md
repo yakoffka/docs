@@ -119,7 +119,6 @@ php artisan make:middleware EnsureTokenIsValid
 <a name="manually-managing-laravels-default-global-middleware"></a>
 #### Ручное управление глобальным стеком посредников
 
-If you would like to manage Laravel's global middleware stack manually, you may provide Laravel's default stack of global middleware to the `use` method. Then, you may adjust the default middleware stack as necessary:
 Если вы хотите управлять глобальным стеком посредников Laravel вручную, вы можете предоставить глобальный стек посредников Laravel по умолчанию для метода `use`. Затем вы можете при необходимости настроить стек посредников по умолчанию:
 
     ->withMiddleware(function (Middleware $middleware) {
@@ -289,7 +288,6 @@ If you would like to append or prepend middleware to these groups, you may use t
 <a name="middleware-aliases"></a>
 ### Псевдонимы посредников
 
-You may assign aliases to middleware in your application's `bootstrap/app.php` file. Middleware aliases allow you to define a short alias for a given middleware class, which can be especially useful for middleware with long class names:
 Вы можете назначить псевдонимы посредникам в файле `bootstrap/app.php` вашего приложения. Псевдонимы посредников позволяют определить короткий псевдоним для данного класса посредника, что может быть особенно полезно для посредника с длинными именами классов:
 
     use App\Http\Middleware\EnsureUserIsSubscribed;
@@ -306,7 +304,6 @@ You may assign aliases to middleware in your application's `bootstrap/app.php` f
         // ...
     })->middleware('subscribed');
 
-For convenience, some of Laravel's built-in middleware are aliased by default. For example, the `auth` middleware is an alias for the `Illuminate\Auth\Middleware\Authenticate` middleware. Below is a list of the default middleware aliases:
 Для удобства некоторые встроенные посредники Laravel по умолчанию имеют псевдонимы. Например, посредник `auth` является псевдонимом посредника `Illuminate\Auth\Middleware\Authenticate`. Ниже приведен список псевдонимов посредников по умолчанию:
 
 | Псевдоним          | Посредник                                                                                                      |
