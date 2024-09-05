@@ -152,7 +152,7 @@ Schedule::command('emails:send')->daily();
 <a name="base-controller-class"></a>
 #### Базовый класс `Controller`
 
-The base controller included in new Laravel applications has been simplified. It no longer extends Laravel's internal `Controller` class, and the `AuthorizesRequests` and `ValidatesRequests` traits have been removed, as they may be included in your application's individual controllers if desired:
+Базовый контроллер, включенный в новые приложения Laravel, был упрощен. Он больше не расширяет внутренний класс `Controller` Laravel, а трейты `AuthorizesRequests` и `ValidatesRequests` были удалены, поскольку при желании они могут быть включены в отдельные контроллеры вашего приложения:
 
     <?php
 
@@ -239,7 +239,6 @@ _Автоматическое изменение (rehashing) пароля был
 
 Алгоритм хеширования паролей в Laravel по умолчанию — bcrypt. «Рабочий коэффициент» для хешей bcrypt можно настроить с помощью файла конфигурации `config/hashing.php` или переменной среды `BCRYPT_ROUNDS`.
 
-Typically, the bcrypt work factor should be increased over time as CPU / GPU processing power increases. If you increase the bcrypt work factor for your application, Laravel will now gracefully and automatically rehash user passwords as users authenticate with your application.
 Обычно рабочий коэффициент bcrypt следует увеличивать с течением времени по мере увеличения вычислительной мощности процессора/графического процессора. Если вы увеличите рабочий коэффициент bcrypt для своего приложения, Laravel теперь будет корректно и автоматически перехешировать пароли пользователей, когда пользователи проходят аутентификацию в вашем приложении.
 
 <a name="prompt-validation"></a>
