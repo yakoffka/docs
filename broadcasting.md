@@ -1,5 +1,5 @@
 ---
-git: 9c42f8596c5ceadc3496f20044b7a38f620419a2
+git: eb257374f1b48862572c496e1e500ba550dd807a
 ---
 
 # Трансляция (broadcast) событий
@@ -18,7 +18,7 @@ git: 9c42f8596c5ceadc3496f20044b7a38f620419a2
 <a name="supported-drivers"></a>
 #### Поддерживаемые драйверы
 
-По умолчанию Laravel содержит два серверных драйвера трансляции на выбор: [Pusher Channels](https://pusher.com/channels) и [Ably](https://ably.com). Однако пакеты сообщества, например, [soketi](https://docs.soketi.app/), предлагают дополнительные драйверы трансляции без использования платных провайдеров.
+По умолчанию Laravel содержит три серверных драйвера трансляции на выбор: [Laravel Reverb](https://reverb.laravel.com), [Pusher Channels](https://pusher.com/channels), и [Ably](https://ably.com)
 
 > [!NOTE]
 > Прежде чем ближе ознакомиться с трансляцией событий, убедитесь, что вы прочитали документацию Laravel о [событиях и слушателях](/docs/{{version}}/events).
@@ -33,17 +33,42 @@ git: 9c42f8596c5ceadc3496f20044b7a38f620419a2
 <a name="configuration"></a>
 ### Конфигурирование
 
-Вся конфигурация трансляций событий вашего приложения хранится в конфигурационном файле `config/broadcasting.php`. Laravel из коробки поддерживает несколько драйверов трансляции: [Pusher Channels](https://pusher.com/channels), [Redis](/docs/{{version}}/redis), и драйвер `log` для локальной разработки и отладки. Кроме того, поддерживается драйвер `null`, который позволяет полностью отключить трансляцию во время тестирования. В конфигурационном файле `config/broadcasting.php` содержится пример конфигурации для каждого из этих драйверов.
+Вся конфигурация трансляций событий вашего приложения хранится в конфигурационном файле `config/broadcasting.php`. Не волнуйтесь, если этот каталог не существует в вашем приложении; он будет создан при запуске Artisan-команды `install:broadcasting`.
 
-<a name="broadcast-service-provider"></a>
-#### Поставщик службы трансляции
+Laravel из коробки поддерживает несколько драйверов трансляции: [Laravel Reverb](/docs/{{version}}/reverb), [Pusher Channels](https://pusher.com/channels), [Ably](https://ally.com), а также драйвер `log` для локальной разработки и отладки. Кроме того, поддерживается драйвер `null`, который позволяет полностью отключить трансляцию во время тестирования. В конфигурационном файле `config/broadcasting.php` содержится пример конфигурации для каждого из этих драйверов.
 
-Перед трансляцией каких-либо событий, вам сначала необходимо зарегистрировать поставщика `App\Providers\BroadcastServiceProvider`. В новых приложениях Laravel вам нужно только раскомментировать этого поставщика в массиве `providers` конфигурационного файла `config/app.php`. Поставщик `BroadcastServiceProvider` содержит код, необходимый для регистрации маршрутов авторизации трансляции.
+<a name="installation"></a>
+#### Установка
+
+По умолчанию трансляция не включена в новых приложениях Laravel. Вы можете включить трансляцию с помощью Artisan-команды `install:broadcasting`:
+
+```shell
+php artisan install:broadcasting
+```
+
+Команда `install:broadcasting` создаст файл конфигурации `config/broadcasting.php`. Кроме того, команда создаст файл `routes/channels.php`, в котором вы можете зарегистрировать маршруты авторизации трансляции и обратные вызовы вашего приложения.
 
 <a name="queue-configuration"></a>
 #### Конфигурирование очереди
 
-Вам также потребуется настроить и запустить [обработчик очереди](/docs/{{version}}/queues). Все трансляции событий выполняются через задания в очереди, так что время отклика вашего приложения не сильно зависит от транслируемых событий.
+Прежде чем транслировать какие-либо события, вам следует сначала настроить и запустить [обработчик очереди](/docs/{{version}}/queues). Вся трансляция событий выполняются через задания в очереди, поэтому транслируемые события не оказывают серьезного влияния на время отклика вашего приложения.
+
+<a name="reverb"></a>
+### Reverb
+
+При запуске команды `install:broadcasting` вам будет предложено установить [Laravel Reverb](/docs/{{version}}/reverb). Конечно, вы также можете установить Reverb вручную, используя менеджер пакетов Composer.
+
+```sh
+composer require laravel/reverb
+```
+
+После установки пакета вы можете запустить команду установки Reverb, чтобы опубликовать конфигурацию, добавить необходимые переменные среды Reverb и включить трансляцию событий в вашем приложении:
+
+```sh
+php artisan reverb:install
+```
+
+Подробные инструкции по установке и использованию Reverb можно найти в [документации Reverb](/docs/{{version}}/reverb).
 
 <a name="pusher-channels"></a>
 ### Pusher Channels
@@ -54,29 +79,27 @@ git: 9c42f8596c5ceadc3496f20044b7a38f620419a2
 composer require pusher/pusher-php-server
 ```
 
-Далее, вы должны настроить свои учетные данные Pusher Channels в конфигурационном файле `config/broadcasting.php`. Пример конфигурации Pusher Channels уже содержится в этом файле, что позволяет быстро указать параметры `key`, `secret`, и `app_id`. Как правило, эти значения должны быть установлены через [переменные окружения](/docs/{{version}}/configuration#environment-configuration) `PUSHER_APP_KEY`, `PUSHER_APP_SECRET` и `PUSHER_APP_ID`:
+Далее, вы должны настроить свои учетные данные Pusher Channels в конфигурационном файле `config/broadcasting.php`. Пример конфигурации Pusher Channels уже содержится в этом файле, что позволяет быстро указать параметры `key`, `secret`, и `app_id`. Обычно вам следует настроить учетные данные Pusher Channels в файле `.env` вашего приложения:
 
 ```ini
-PUSHER_APP_ID=your-pusher-app-id
-PUSHER_APP_KEY=your-pusher-key
-PUSHER_APP_SECRET=your-pusher-secret
-PUSHER_APP_CLUSTER=mt1
+PUSHER_APP_ID="your-pusher-app-id"
+PUSHER_APP_KEY="your-pusher-key"
+PUSHER_APP_SECRET="your-pusher-secret"
+PUSHER_HOST=
+PUSHER_PORT=443
+PUSHER_SCHEME="https"
+PUSHER_APP_CLUSTER="mt1"
 ```
 
 Конфигурация `pusher` в файле `config/broadcasting.php` также позволяет вам указывать дополнительные параметры, которые поддерживаются Pusher, например, `cluster`.
 
-Далее, вам нужно будет изменить драйвер трансляции на `pusher` в файле `.env`:
+Затем установите для переменной среды `BROADCAST_CONNECTION` значение `pusher` в файле `.env` вашего приложения:
 
 ```ini
-BROADCAST_DRIVER=pusher
+BROADCAST_CONNECTION=pusher
 ```
 
 И, наконец, вы готовы установить и настроить [Laravel Echo](#client-side-installation), который будет получать транслируемые события на клиентской стороне.
-
-<a name="pusher-compatible-open-source-alternatives"></a>
-#### Альтернативы Pusher с открытым кодом
-
-[Soketi](https://docs.soketi.app/) предоставляет совместимые с Pusher серверы WebSocket для Laravel, позволяя вам использовать всю мощь вещания Laravel без использования коммерческого провайдера WebSocket. Для получения дополнительной информации по установке и использованию открытых пакетов для вещания обратитесь к нашей документации по [альтернативам с открытым исходным кодом](#open-source-alternatives)..
 
 <a name="ably"></a>
 ### Ably
@@ -96,40 +119,72 @@ composer require ably/ably-php
 ABLY_KEY=your-ably-key
 ```
 
-Далее, вам нужно будет изменить драйвер трансляции на `ably` в файле `.env`:
+Затем установите для переменной среды `BROADCAST_CONNECTION` значение `ably` в файле .env вашего приложения:
 
 ```ini
-BROADCAST_DRIVER=ably
+BROADCAST_CONNECTION=ably
 ```
 
 И, наконец, вы готовы установить и настроить [Laravel Echo](#client-side-installation), который будет получать транслируемые события на клиентской стороне.
 
-<a name="open-source-alternatives"></a>
-### Альтернативы с открытым исходным кодом
-
-<a name="open-source-alternatives-node"></a>
-#### Node
-
-[Soketi](https://github.com/soketi/soketi) — это основанный на Node, совместимый с Pusher сервер WebSocket для Laravel. Под капотом Soketi используется µWebSockets.js для максимальной масштабируемости и скорости. Этот пакет позволяет вам использовать всю мощь вещания Laravel без коммерческого провайдера WebSocket. Для получения дополнительной информации об установке и использовании этого пакета обратитесь к его [официальной документации](https://docs.soketi.app/).
-
 <a name="client-side-installation"></a>
 ## Установка на стороне клиента
 
-<a name="client-pusher-channels"></a>
-### Pusher Channels
+<a name="client-reverb"></a>
+### Reverb
 
-[Laravel Echo](https://github.com/laravel/echo) – это JavaScript-библиотека, которая упрощает подписку на каналы и прослушивание событий, транслируемые вашим драйвером трансляции на стороне сервера. Вы можете установить Echo через менеджер пакетов NPM. В этом примере мы также установим пакет `pusher-js`, так как мы будем использовать вещатель Pusher Channels:
+[Laravel Echo](https://github.com/laravel/echo) — это библиотека JavaScript, которая позволяет без труда подписываться на каналы и прослушивать события, транслируемые вашим серверным драйвером вещания. Вы можете установить Echo через менеджер пакетов NPM. В этом примере мы также установим пакет `pusher-js`, поскольку Reverb использует протокол Pusher для подписок, каналов и сообщений WebSocket:
 
 ```shell
 npm install --save-dev laravel-echo pusher-js
 ```
 
-После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Отличное место для этого – окончание файла `resources/js/bootstrap.js`, который уже содержится в фреймворке Laravel. По умолчанию пример конфигурации Echo также находится в этом файле – вам просто нужно раскомментировать его:
+Once Echo is installed, you are ready to create a fresh Echo instance in your application's JavaScript. A great place to do this is at the bottom of the `resources/js/bootstrap.js` file that is included with the Laravel framework. By default, an example Echo configuration is already included in this file - you simply need to uncomment it and update the `broadcaster` configuration option to `reverb`:
+После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Отличное место для этого — внизу файла `resources/js/bootstrap.js`, который входит в состав фреймворка Laravel. По умолчанию в этот файл уже включен пример конфигурации Echo — вам просто нужно раскомментировать его и обновить параметр конфигурации `broadcaster` на `reverb`:
 
 ```js
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 
+import Pusher from 'pusher-js';
+window.Pusher = Pusher;
+
+window.Echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT,
+    wssPort: import.meta.env.VITE_REVERB_PORT,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+    enabledTransports: ['ws', 'wss'],
+});
+```
+
+Далее вам следует скомпилировать ресурсы вашего приложения:
+
+```shell
+npm run build
+```
+
+> [!WARNING]  
+> Для трансляции Laravel Echo `reverb` требуется laravel-echo v1.16.0+.
+
+<a name="client-pusher-channels"></a>
+### Pusher Channels
+
+[Laravel Echo](https://github.com/laravel/echo) — это JavaScript-библиотека, которая упрощает подписку на каналы и прослушивание событий, транслируемые вашим серверным драйвером трансляции. Echo также использует пакет NPM `pusher-js` для реализации протокола Pusher для подписок, каналов и сообщений WebSocket.
+
+Команда Artisan `install:broadcasting` автоматически устанавливает для вас пакеты `laravel-echo` и `pusher-js`; однако вы также можете установить эти пакеты вручную через NPM:
+
+```shell
+npm install --save-dev laravel-echo pusher-js
+```
+
+После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Команда `install:broadcasting` создает файл конфигурации Echo по адресу `resources/js/echo.js`; однако конфигурация по умолчанию в этом файле предназначена для Laravel Reverb. Вы можете скопировать конфигурацию ниже, чтобы перенести вашу конфигурацию на Pusher:
+
+```js
+import Echo from 'laravel-echo';
+
+import Pusher from 'pusher-js';
 window.Pusher = require('pusher-js');
 
 window.Echo = new Echo({
@@ -140,7 +195,26 @@ window.Echo = new Echo({
 });
 ```
 
-После того как вы раскомментировали и настроили конфигурацию Echo в соответствии с вашими потребностями, вы можете скомпилировать исходники вашего приложения:
+Далее вам следует определить соответствующие значения для переменных среды Pusher в файле `.env` вашего приложения. Если эти переменные еще не существуют в вашем файле `.env`, вам следует добавить их:
+
+```ini
+PUSHER_APP_ID="your-pusher-app-id"
+PUSHER_APP_KEY="your-pusher-key"
+PUSHER_APP_SECRET="your-pusher-secret"
+PUSHER_HOST=
+PUSHER_PORT=443
+PUSHER_SCHEME="https"
+PUSHER_APP_CLUSTER="mt1"
+
+VITE_APP_NAME="${APP_NAME}"
+VITE_PUSHER_APP_KEY="${PUSHER_APP_KEY}"
+VITE_PUSHER_HOST="${PUSHER_HOST}"
+VITE_PUSHER_PORT="${PUSHER_PORT}"
+VITE_PUSHER_SCHEME="${PUSHER_SCHEME}"
+VITE_PUSHER_APP_CLUSTER="${PUSHER_APP_CLUSTER}"
+```
+
+После того, как вы настроили конфигурацию Echo в соответствии с потребностями вашего приложения, вы можете скомпилировать ресурсы вашего приложения:
 
 ```shell
 npm run build
@@ -175,9 +249,9 @@ window.Echo = new Echo({
 > [!NOTE]  
 > Ниже приведено описание того, как использовать Ably в режиме "совместимости с Pusher". Однако команда Ably рекомендует и поддерживает вещатель и клиент Echo, способные использовать уникальные возможности, предлагаемые Ably. Для получения дополнительной информации о использовании поддерживаемых Ably драйверов обратитесь к [документации Ably по Laravel broadcaster](https://github.com/ably/laravel-broadcaster).
 
-[Laravel Echo](https://github.com/laravel/echo) – это JavaScript-библиотека, которая позволяет безболезненно подписаться на каналы и прослушивать события, транслируемые вашим драйвером трансляции на стороне сервера. Вы можете установить Echo через менеджер пакетов NPM. В этом примере мы также установим пакет `pusher-js`.
+[Laravel Echo](https://github.com/laravel/echo) — это JavaScript-библиотека, которая позволяет без труда подписываться на каналы и прослушивать события, транслируемые вашим серверным драйвером трансляции. Echo также использует пакет NPM `pusher-js` для реализации протокола Pusher для подписок, каналов и сообщений WebSocket.
 
-Вы можете задаться вопросом, зачем нам устанавливать библиотеку `pusher-js` JavaScript, даже если мы используем Ably для трансляции наших событий. К счастью, Ably имеет режим совместимости Pusher, который позволяет нам использовать протокол Pusher при прослушивании событий в нашем клиентском приложении:
+Команда Artisan `install:broadcasting` автоматически устанавливает для вас пакеты `laravel-echo` и `pusher-js`; однако вы также можете установить эти пакеты вручную через NPM:
 
 ```shell
 npm install --save-dev laravel-echo pusher-js
@@ -185,12 +259,12 @@ npm install --save-dev laravel-echo pusher-js
 
 **Прежде чем продолжить, вы должны включить поддержку протокола Pusher в настройках вашего приложения Ably. Вы можете включить эту функцию в разделе настроек «Protocol Adapter Settings» панели вашего приложения Ably.**
 
-После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Отличное место для этого – окончание файла `resources/js/bootstrap.js`, который уже содержится в фреймворке Laravel. По умолчанию пример конфигурации Echo также находится в этом файле – вам просто нужно раскомментировать его; однако конфигурация по умолчанию в файле `bootstrap.js` предназначена для Pusher. Вы можете скопировать конфигурацию ниже, чтобы применить ее к Ably:
+После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Команда `install:broadcasting` создает файл конфигурации Echo по адресу `resources/js/echo.js`; однако конфигурация по умолчанию в этом файле предназначена для Laravel Reverb. Вы можете скопировать конфигурацию ниже, чтобы перенести ее в Ably:
 
 ```js
 import Echo from 'laravel-echo';
-import Pusher from 'pusher-js';
 
+import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 window.Echo = new Echo({
@@ -203,9 +277,9 @@ window.Echo = new Echo({
 });
 ```
 
-Обратите внимание, что наша конфигурация Echo для Ably ссылается на переменную окружения `VITE_ABLY_PUBLIC_KEY`. Значение этой переменной должно быть вашим публичным ключом Ably. Ваш публичный ключ – это часть ключа Ably перед символом `:`.
+Возможно, вы заметили, что наша конфигурация Echo для Ably ссылается на переменную окружения `VITE_ABLY_PUBLIC_KEY`. Значение этой переменной должно быть вашим публичным ключом Ably. Ваш публичный ключ – это часть ключа Ably перед символом `:`.
 
-После того как вы раскомментировали и настроили конфигурацию Echo в соответствии с вашими потребностями, вы можете скомпилировать исходники вашего приложения:
+После того как вы настроили конфигурацию Echo в соответствии с вашими потребностями, вы можете скомпилировать исходники вашего приложения:
 
 ```shell
 npm run dev
@@ -220,9 +294,6 @@ npm run dev
 Трансляция событий Laravel позволяет транслировать серверные события Laravel в JavaScript-приложение на клиентской стороне, используя драйверный подход к WebSockets. В настоящее время Laravel поставляется с драйверами [Pusher Channels](https://pusher.com/channels) и [Ably](https://ably.com). События могут быть легко обработаны на стороне клиента с помощью JavaScript-пакета [Laravel Echo](#client-side-installation).
 
 События транслируются по «каналам», которые могут быть публичными или частными. Любой посетитель вашего приложения может подписаться на публичный канал без какой-либо аутентификации или авторизации; однако, чтобы подписаться на частный канал, пользователь должен быть аутентифицирован и авторизован для прослушивания событий на этом канале.
-
-> [!NOTE]  
-> Если вы хотите изучить альтернативы Pusher с открытым исходным кодом, ознакомьтесь с [альтернативами с открытым исходным кодом](#open-source-alternatives).
 
 <a name="using-example-application"></a>
 ### Пример использования
@@ -257,7 +328,7 @@ npm run dev
         /**
          * Экземпляр заказа.
          *
-         * @var \App\Order
+         * @var \App\Models\Order
          */
         public $order;
     }
@@ -490,63 +561,14 @@ Echo.private(`orders.${orderId}`)
 <a name="authorizing-channels"></a>
 ## Авторизация каналов
 
-Частные каналы требуют, чтобы текущий аутентифицированный пользователь был авторизован и действительно мог прослушивать канал. Это достигается путем отправки HTTP-запроса вашему приложению Laravel с именем канала, что позволит вашему приложению определить, может ли пользователь прослушивать этот канал. При использовании [Laravel Echo](#client-side-installation) HTTP-запрос на авторизацию подписок на частные каналы будет выполнен автоматически; однако вам необходимо определить верные маршруты для ответа на эти запросы.
+Частные каналы требуют, чтобы текущий аутентифицированный пользователь был авторизован и действительно мог прослушивать канал. Это достигается путем отправки HTTP-запроса вашему приложению Laravel с именем канала, что позволит вашему приложению определить, может ли пользователь прослушивать этот канал. При использовании [Laravel Echo](#client-side-installation) HTTP-запрос на авторизацию подписок на частные каналы будет выполнен автоматически.
 
-<a name="defining-authorization-routes"></a>
-### Определение маршрутов авторизации
-
-Laravel упрощает определение маршрутов для ответа на запросы об авторизации канала. В поставщике `App\Providers\BroadcastServiceProvider` вашего приложения, вы увидите вызов метода `Broadcast::routes`. Этот метод зарегистрирует маршрут `/broadcasting/auth` для обработки запросов авторизации:
-
-    Broadcast::routes();
-
-Метод `Broadcast::routes` автоматически применит посредника `web` для [группы своих маршрутов](/docs/{{version}}/routing#route-groups); однако вы можете передать в метод массив атрибутов маршрута, если хотите изменить присваиваемые им атрибуты:
-
-    Broadcast::routes($attributes);
-
-<a name="customizing-the-authorization-endpoint"></a>
-#### Изменение конечной точки авторизации
-
-По умолчанию Echo будет использовать конечную точку `/broadcasting/auth` для авторизации доступа к каналу. Однако вы можете указать свою собственную конечную точку авторизации, передав параметр конфигурации `authEndpoint` вашему экземпляру Echo:
-
-```js
-window.Echo = new Echo({
-    broadcaster: 'pusher',
-    // ...
-    authEndpoint: '/custom/endpoint/auth'
-});
-```
-
-<a name="customizing-the-authorization-request"></a>
-#### Настройка запроса на авторизацию
-
-Вы можете настроить, как Laravel Echo выполняет запросы авторизации, предоставив настраиваемый авторизатор при инициализации Echo:
-
-```js
-window.Echo = new Echo({
-    // ...
-    authorizer: (channel, options) => {
-        return {
-            authorize: (socketId, callback) => {
-                axios.post('/api/broadcasting/auth', {
-                    socket_id: socketId,
-                    channel_name: channel.name
-                })
-                .then(response => {
-                    callback(null, response.data);
-                })
-                .catch(error => {
-                    callback(error);
-                });
-            }
-        };
-    },
-})
-```
+Когда вещание включено, Laravel автоматически регистрирует маршрут `/broadcasting/auth` для обработки запросов на авторизацию. Маршрут `/broadcasting/auth` автоматически помещается в группу посредников `web`.
 
 <a name="defining-authorization-callbacks"></a>
 ### Определение авторизации канала
 
-Затем нам нужно определить логику, которая фактически будет определять, может ли текущий аутентифицированный пользователь прослушивать указанный канал. Это делается в файле `routes/channels.php`, находящемся в вашем приложении. В этом файле вы можете использовать метод `Broadcast::channel` для регистрации замыканий авторизации канала:
+Затем нам нужно определить логику, которая фактически будет определять, может ли текущий аутентифицированный пользователь прослушивать указанный канал. Это делается в файле `routes/channels.php`, созданном командой Artisan `install:broadcasting`. В этом файле вы можете использовать метод `Broadcast::channel` для регистрации замыканий авторизации канала:
 
     use App\Models\User;
 
@@ -618,10 +640,7 @@ php artisan make:channel OrderChannel
         /**
          * Создать новый экземпляр канала.
          */
-        public function __construct()
-        {
-            // ...
-        }
+        public function __construct() {}
 
         /**
          * Подтвердить доступ пользователя к каналу.
@@ -713,6 +732,65 @@ var socketId = Echo.socketId();
             $this->broadcastVia('pusher');
         }
     }
+
+<a name="anonymous-events"></a>
+### Анонимные события
+
+Иногда вам может потребоваться транслировать простое событие во внешний интерфейс вашего приложения без создания специального класса событий. Чтобы обеспечить это, фасад `Broadcast` позволяет транслировать «анонимные события»:
+
+```php
+Broadcast::on('orders.'.$order->id)->send();
+```
+
+В приведенном выше примере будет транслироваться следующее событие:
+
+```json
+{
+    "event": "AnonymousEvent",
+    "data": "[]",
+    "channel": "orders.1"
+}
+```
+
+Используя методы `as` и `with`, вы можете настроить имя и данные события:
+
+```php
+Broadcast::on('orders.'.$order->id)
+    ->as('OrderPlaced')
+    ->with($order)
+    ->send();
+```
+
+В приведенном выше примере будет транслироваться событие, подобное следующему:
+
+```json
+{
+    "event": "OrderPlaced",
+    "data": "{ id: 1, total: 100 }",
+    "channel": "orders.1"
+}
+```
+
+Если вы хотите транслировать анонимное событие на частном канале или канале присутствия, вы можете использовать методы `private` и `presence`:
+
+```php
+Broadcast::private('orders.'.$order->id)->send();
+Broadcast::presence('channels.'.$channel->id)->send();
+```
+
+При рассылке анонимного события с помощью метода `send` оно отправляется в [очередь](/docs/{{version}}/queues) вашего приложения для обработки. Однако, если вы хотите немедленно транслировать событие, вы можете использовать метод `sendNow`:
+
+```php
+Broadcast::on('orders.'.$order->id)->sendNow();
+```
+
+Чтобы транслировать событие всем подписчикам канала, кроме текущего аутентифицированного пользователя, вы можете вызвать метод `toOthers`:
+
+```php
+Broadcast::on('orders.'.$order->id)
+    ->toOthers()
+    ->send();
+```
 
 <a name="receiving-broadcasts"></a>
 ## Прием трансляций
@@ -1088,4 +1166,4 @@ Echo.private(`App.Models.User.${userId}`)
     });
 ```
 
-В этом примере все уведомления, отправленные экземплярам `App\Models\User` через канал `broadcast`, будут получены в замыкании. Авторизация канала `App.Models.User.{id}` уже изначально содержится в `BroadcastServiceProvider` фреймворка Laravel.
+В этом примере все уведомления, отправленные экземплярам `App\Models\User` через канал `broadcast`, будут получены в замыкании. Авторизация канала `App.Models.User.{id}` включена в файл `routes/channels.php` вашего приложения.
