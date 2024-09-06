@@ -1,5 +1,5 @@
 ---
-git: fdeb961799b9969361bc41525cfacfa6f685b533
+git: a6124510a5db5a83e9268fafdb48b6cc8e1ebbb1
 ---
 
 # Строки
@@ -350,7 +350,6 @@ Laravel включает в себя различные функции для р
     // 'fooBar'
 
 <a name="method-char-at"></a>
-
 #### `Str::charAt()` 
 
 Метод `Str::charAt` возвращает символ по указанному индексу. Если индекс выходит за границы, возвращается значение `false`:
@@ -361,10 +360,48 @@ Laravel включает в себя различные функции для р
 
     // 's'
 
+<a name="method-str-chop-start"></a>
+#### `Str::chopStart()`
+
+Метод `Str::chopStart` удаляет первое вхождение данного значения, только если значение появляется в начале строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::chopStart('https://laravel.com', 'https://');
+
+    // 'laravel.com'
+
+Вы также можете передать массив в качестве второго аргумента. Если строка начинается с любого значения в массиве, это значение будет удалено из строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::chopStart('http://laravel.com', ['https://', 'http://']);
+
+    // 'laravel.com'
+
+<a name="method-str-chop-end"></a>
+#### `Str::chopEnd()`
+
+Метод `Str::chopEnd` удаляет последнее вхождение данного значения, только если значение появляется в конце строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::chopEnd('app/Models/Photograph.php', '.php');
+
+    // 'app/Models/Photograph'
+
+Вы также можете передать массив в качестве второго аргумента. Если строка заканчивается любым из значений массива, это значение будет удалено из строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::chopEnd('laravel.com/index.php', ['/index.html', '/index.php']);
+
+    // 'laravel.com'
+
 <a name="method-str-contains"></a>
 #### `Str::contains()` 
 
-Метод `Str::contains` определяет, содержит ли переданная строка указанное значение (с учетом регистра):
+Метод `Str::contains` определяет, содержит ли переданная строка указанное значение. По умолчанию этот метод чувствителен к регистру:
 
     use Illuminate\Support\Str;
 
@@ -380,6 +417,14 @@ Laravel включает в себя различные функции для р
 
     // true
 
+Вы можете отключить чувствительность к регистру, установив для аргумента `ignoreCase` значение `true`:
+
+    use Illuminate\Support\Str;
+
+    $contains = Str::contains('This is my name', 'MY', ignoreCase: true);
+
+    // true
+
 <a name="method-str-contains-all"></a>
 #### `Str::containsAll()` 
 
@@ -388,6 +433,14 @@ Laravel включает в себя различные функции для р
     use Illuminate\Support\Str;
 
     $containsAll = Str::containsAll('This is my name', ['my', 'name']);
+
+    // true
+
+Вы можете отключить чувствительность к регистру, установив для аргумента `ignoreCase` значение `true`:
+
+    use Illuminate\Support\Str;
+
+    $containsAll = Str::containsAll('This is my name', ['MY', 'NAME'], ignoreCase: true);
 
     // true
 
@@ -401,7 +454,6 @@ Laravel включает в себя различные функции для р
     $result = Str::endsWith('This is my name', 'name');
 
     // true
-
 
 Вы также можете указать массив значений, чтобы определить, заканчивается ли переданная строка каким-либо из значений:
 
@@ -495,7 +547,6 @@ Laravel включает в себя различные функции для р
     ]);
 
     // Inject: alert(&quot;Hello XSS!&quot;);
-
 
 <a name="method-str-is"></a>
 #### `Str::is()` 
@@ -641,11 +692,15 @@ Laravel включает в себя различные функции для р
 
 Вы также можете передать третий строковый аргумент, содержимое которого будет добавлено в конец:
 
-    use Illuminate\Support\Str;
-
     $truncated = Str::limit('The quick brown fox jumps over the lazy dog', 20, ' (...)');
 
     // The quick brown fox (...)
+
+Если вы хотите сохранить полные слова при усечении строки, вы можете использовать аргумент `preserveWords`. Если этот аргумент имеет значение `true`, строка будет обрезана до ближайшей полной границы слова:
+
+    $truncated = Str::limit('The quick brown fox', 12, preserveWords: true);
+
+    // The quick...
 
 <a name="method-str-lower"></a>
 #### `Str::lower()` 
@@ -873,11 +928,11 @@ $repeat = Str::repeat($string, 5);
 
     use Illuminate\Support\Str;
 
-    $string = 'Laravel 8.x';
+    $string = 'Laravel 10.x';
 
-    $replaced = Str::replace('8.x', '9.x', $string);
+    $replaced = Str::replace('10.x', '11.x', $string);
 
-    // Laravel 9.x
+    // Laravel 11.x
 
 Метод `replace` также принимает аргумент `caseSensitive`. По умолчанию метод `replace` чувствителен к регистру:
 
@@ -1169,6 +1224,50 @@ $repeat = Str::repeat($string, 5);
 
     $htmlString = Str::of('Nuno Maduro')->toHtmlString();
 
+<a name="method-str-transliterate"></a>
+#### `Str::transliterate()`
+
+Метод `Str::transliterate` попытается преобразовать данную строку в ее ближайшее представление ASCII:
+
+    use Illuminate\Support\Str;
+
+    $email = Str::transliterate('ⓣⓔⓢⓣ@ⓛⓐⓡⓐⓥⓔⓛ.ⓒⓞⓜ');
+
+    // 'test@laravel.com'
+
+<a name="method-str-trim"></a>
+#### `Str::trim()` {.collection-method}
+
+Метод `Str::trim` удаляет пробелы (или другие символы) из начала и конца заданной строки. В отличие от встроенной функции PHP `trim`, метод `Str::trim` также удаляет пробельные символы Юникода:
+
+    use Illuminate\Support\Str;
+
+    $string = Str::trim(' foo bar ');
+
+    // 'foo bar'
+
+<a name="method-str-ltrim"></a>
+#### `Str::ltrim()` {.collection-method}
+
+Метод Str::ltrim удаляет пробелы (или другие символы) с начала заданной строки. В отличие от встроенной функции PHP `ltrim`, метод `Str::ltrim` также удаляет пробельные символы Юникода:
+
+    use Illuminate\Support\Str;
+
+    $string = Str::ltrim('  foo bar  ');
+
+    // 'foo bar  '
+
+<a name="method-str-rtrim"></a>
+#### `Str::rtrim()` {.collection-method}
+
+Метод `Str::rtrim` удаляет пробелы (или другие символы) с конца заданной строки. В отличие от встроенной функции PHP `rtrim`, метод `Str::rtrim` также удаляет пробельные символы Юникода:
+
+    use Illuminate\Support\Str;
+
+    $string = Str::rtrim('  foo bar  ');
+
+    // '  foo bar'
+
 <a name="method-str-ucfirst"></a>
 #### `Str::ucfirst()` 
 
@@ -1210,7 +1309,7 @@ $repeat = Str::repeat($string, 5);
     use Illuminate\Support\Str;
 
     return (string) Str::ulid();
-    
+
     // 01gd6r360bp37zj17nxb55yv40
 
 Если вы хотите получить экземпляр даты `Illuminate\Support\Carbon`, представляющий дату и время создания заданного ULID, вы можете использовать метод `createFromId`, предоставленный интеграцией Carbon в Laravel:
@@ -1487,10 +1586,48 @@ Str::wordCount('Hello, world!'); // 2
 
     // 'Baz'
 
+<a name="method-fluent-str-chop-start"></a>
+#### `chopStart`
+
+Метод `chopStart` удаляет первое вхождение данного значения, только если значение появляется в начале строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::of('https://laravel.com')->chopStart('https://');
+
+    // 'laravel.com'
+
+Вы также можете передать массив. Если строка начинается с любого значения в массиве, это значение будет удалено из строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::of('http://laravel.com')->chopStart(['https://', 'http://']);
+
+    // 'laravel.com'
+
+<a name="method-fluent-str-chop-end"></a>
+#### `chopEnd`
+
+Метод `chopEnd` удаляет последнее вхождение данного значения, только если значение появляется в конце строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::of('https://laravel.com')->chopEnd('.com');
+
+    // 'https://laravel'
+
+Вы также можете передать массив. Если строка заканчивается любым из значений массива, это значение будет удалено из строки:
+
+    use Illuminate\Support\Str;
+
+    $url = Str::of('http://laravel.com')->chopEnd(['.com', '.io']);
+
+    // 'http://laravel'
+
 <a name="method-fluent-str-contains"></a>
 #### `contains` 
 
-Метод `contains` определяет, содержит ли переданная строка указанное значение (с учетом регистра):
+Метод `contains` определяет, содержит ли переданная строка указанное значение. По умолчанию этот метод чувствителен к регистру:
 
     use Illuminate\Support\Str;
 
@@ -1506,6 +1643,14 @@ Str::wordCount('Hello, world!'); // 2
 
     // true
 
+Вы можете отключить чувствительность к регистру, установив для аргумента `ignoreCase` значение `true`:
+
+    use Illuminate\Support\Str;
+
+    $contains = Str::of('This is my name')->contains('MY', ignoreCase: true);
+
+    // true
+
 <a name="method-fluent-str-contains-all"></a>
 #### `containsAll` 
 
@@ -1514,6 +1659,14 @@ Str::wordCount('Hello, world!'); // 2
     use Illuminate\Support\Str;
 
     $containsAll = Str::of('This is my name')->containsAll(['my', 'name']);
+
+    // true
+
+Вы можете отключить чувствительность к регистру, установив для аргумента `ignoreCase` значение `true`:
+
+    use Illuminate\Support\Str;
+
+    $containsAll = Str::of('This is my name')->containsAll(['MY', 'NAME'], ignoreCase: true);
 
     // true
 
@@ -1799,7 +1952,6 @@ Str::wordCount('Hello, world!'); // 2
 
     // foo Bar
 
-
 <a name="method-fluent-str-length"></a>
 #### `length` 
 
@@ -1824,11 +1976,15 @@ Str::wordCount('Hello, world!'); // 2
 
 Вы также можете передать второй строковый аргумент, содержимое которого будет добавлено в конец:
 
-    use Illuminate\Support\Str;
-
     $truncated = Str::of('The quick brown fox jumps over the lazy dog')->limit(20, ' (...)');
 
     // The quick brown fox (...)
+
+Если вы хотите сохранить полные слова при усечении строки, вы можете использовать аргумент `preserveWords`. Если этот аргумент имеет значение `true`, строка будет обрезана до ближайшей полной границы слова:
+
+    $truncated = Str::of('The quick brown fox')->limit(12, preserveWords: true);
+
+    // The quick...
 
 <a name="method-fluent-str-lower"></a>
 #### `lower` 
@@ -1840,21 +1996,6 @@ Str::wordCount('Hello, world!'); // 2
     $result = Str::of('LARAVEL')->lower();
 
     // 'laravel'
-
-<a name="method-fluent-str-ltrim"></a>
-#### `ltrim` 
-
-Метод `ltrim` удаляет символы из начала строки:
-
-    use Illuminate\Support\Str;
-
-    $string = Str::of('  Laravel  ')->ltrim();
-
-    // 'Laravel  '
-
-    $string = Str::of('/Laravel/')->ltrim('/');
-
-    // 'Laravel/'
 
 <a name="method-fluent-str-markdown"></a>
 #### `markdown` 
@@ -1920,7 +2061,7 @@ Str::wordCount('Hello, world!'); // 2
 
     // collect(['bar', 'bar'])
 
-Если вы укажете группировку в выражении, то Laravel вернет коллекцию совпадений этой группы:
+Если вы укажете группировку в выражении, то Laravel вернет коллекцию совпадений первой группы соответствия:
 
     use Illuminate\Support\Str;
 
@@ -2201,21 +2342,6 @@ $repeated = Str::of('a')->repeat(5);
 
     // Hello World
 
-<a name="method-fluent-str-rtrim"></a>
-#### `rtrim` 
-
-Метод `rtrim` удаляет символы из конца строки:
-
-    use Illuminate\Support\Str;
-
-    $string = Str::of('  Laravel  ')->rtrim();
-
-    // '  Laravel'
-
-    $string = Str::of('/Laravel/')->rtrim('/');
-
-    // '/Laravel'
-
 <a name="method-fluent-str-scan"></a>
 #### `scan` 
 
@@ -2444,10 +2570,21 @@ $repeated = Str::of('a')->repeat(5);
 
     // TGFyYXZlbA==
 
+<a name="method-fluent-str-transliterate"></a>
+#### `transliterate`
+
+Метод `transliterate` попытается преобразовать данную строку в ее ближайшее представление ASCII:
+
+    use Illuminate\Support\Str;
+
+    $email = Str::of('ⓣⓔⓢⓣ@ⓛⓐⓡⓐⓥⓔⓛ.ⓒⓞⓜ')->transliterate()
+
+    // 'test@laravel.com'
+
 <a name="method-fluent-str-trim"></a>
 #### `trim` 
 
-Метод `trim` обрезает переданную строку:
+Метод `trim` обрезает переданную строку. В отличие от встроенной функции PHP `trim`, метод `trim` в Laravel также удаляет пробельные символы Юникода:
 
     use Illuminate\Support\Str;
 
@@ -2458,6 +2595,36 @@ $repeated = Str::of('a')->repeat(5);
     $string = Str::of('/Laravel/')->trim('/');
 
     // 'Laravel'
+
+<a name="method-fluent-str-ltrim"></a>
+#### `ltrim`
+
+Метод `ltrim` обрезает левую часть строки. В отличие от встроенной функции PHP `ltrim`, метод `ltrim` в Laravel также удаляет пробельные символы Юникода:
+
+    use Illuminate\Support\Str;
+
+    $string = Str::of('  Laravel  ')->ltrim();
+
+    // 'Laravel  '
+
+    $string = Str::of('/Laravel/')->ltrim('/');
+
+    // 'Laravel/'
+
+<a name="method-fluent-str-rtrim"></a>
+#### `rtrim` {.collection-method}
+
+Метод `rtrim` обрезает правую часть заданной строки. В отличие от встроенной функции PHP `rtrim`, метод Laravel `rtrim` также удаляет пробельные символы Юникода:
+
+    use Illuminate\Support\Str;
+
+    $string = Str::of('  Laravel  ')->rtrim();
+
+    // '  Laravel'
+
+    $string = Str::of('/Laravel/')->rtrim('/');
+
+    // '/Laravel'
 
 <a name="method-fluent-str-ucfirst"></a>
 #### `ucfirst` 
