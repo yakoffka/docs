@@ -1,5 +1,5 @@
 ---
-git: e22f2dff94009831d3a078e97143b9c3ed31dc72
+git: bb4650831ec4567c07d72f7a9949a95f90c04035
 ---
 
 # Глобальные помощники (helpers)
@@ -38,6 +38,7 @@ Laravel содержит множество глобальных «вспомо�
 - [Arr::keyBy](#method-array-keyby)
 - [Arr::last](#method-array-last)
 - [Arr::map](#method-array-map)
+- [Arr::mapSpread](#method-array-map-spread)
 - [Arr::mapWithKeys](#method-array-map-with-keys)
 - [Arr::only](#method-array-only)
 - [Arr::pluck](#method-array-pluck)
@@ -51,7 +52,6 @@ Laravel содержит множество глобальных «вспомо�
 - [Arr::sort](#method-array-sort)
 - [Arr::sortDesc](#method-array-sort-desc)
 - [Arr::sortRecursive](#method-array-sort-recursive)
-- [Arr::sortRecursiveDesc](#method-array-sort-recursive-desc)
 - [Arr::take](#method-array-take)
 - [Arr::toCssClasses](#method-array-to-css-classes)
 - [Arr::toCssStyles](#method-array-to-css-styles)
@@ -79,8 +79,10 @@ Laravel содержит множество глобальных «вспомо�
 - [Number::forHumans](#method-number-for-humans)
 - [Number::format](#method-number-format)
 - [Number::ordinal](#method-number-ordinal)
+- [Number::pairs](#method-number-pairs)
 - [Number::percentage](#method-number-percentage)
 - [Number::spell](#method-number-spell)
+- [Number::trim](#method-number-trim)
 - [Number::useLocale](#method-number-use-locale)
 - [Number::withLocale](#method-number-with-locale)
 
@@ -136,6 +138,7 @@ Laravel содержит множество глобальных «вспомо�
 - [class_uses_recursive](#method-class-uses-recursive)
 - [collect](#method-collect)
 - [config](#method-config)
+- [context](#method-context)
 - [cookie](#method-cookie)
 - [csrf_field](#method-csrf-field)
 - [csrf_token](#method-csrf-token)
@@ -150,10 +153,12 @@ Laravel содержит множество глобальных «вспомо�
 - [fake](#method-fake)
 - [filled](#method-filled)
 - [info](#method-info)
+- [literal](#method-literal)
 - [logger](#method-logger)
 - [method_field](#method-method-field)
 - [now](#method-now)
 - [old](#method-old)
+- [once](#method-once)
 - [optional](#method-optional)
 - [policy](#method-policy)
 - [redirect](#method-redirect)
@@ -220,7 +225,6 @@ Laravel содержит множество глобальных «вспомо�
     $array = Arr::add(['name' => 'Desk', 'price' => null], 'price', 100);
 
     // ['name' => 'Desk', 'price' => 100]
-
 
 <a name="method-array-collapse"></a>
 #### `Arr::collapse()`
@@ -532,6 +536,30 @@ Laravel содержит множество глобальных «вспомо�
     });
 
     // ['first' => 'James', 'last' => 'Kirk']
+
+<a name="method-array-map-spread"></a>
+#### `Arr::mapSpread()`
+
+The `Arr::mapSpread` method iterates over the array, passing each nested item value into the given closure. The closure is free to modify the item and return it, thus forming a new array of modified items:
+Метод `Arr::mapSpread` выполняет итерацию по массиву, передавая каждое значение вложенного элемента в данное замыкание. Замыкание может изменять элемент и возвращать его, формируя таким образом новый массив измененных элементов:
+
+    use Illuminate\Support\Arr;
+
+    $array = [
+        [0, 1],
+        [2, 3],
+        [4, 5],
+        [6, 7],
+        [8, 9],
+    ];
+
+    $mapped = Arr::mapSpread($array, function (int $even, int $odd) {
+        return $even + $odd;
+    });
+
+    /*
+        [1, 5, 9, 13, 17]
+    */
 
 <a name="method-array-map-with-keys"></a>
 #### `Arr::mapWithKeys()`
@@ -1017,6 +1045,19 @@ $classes = Arr::toCssStyles($array);
 
     // ['Desk 1', 'Desk 2'];
 
+Заполнители `{first}` и `{last}` могут использоваться для получения первого или последнего элемента массива:
+
+    $flight = [
+        'segments' => [
+            ['from' => 'LHR', 'departure' => '9:00', 'to' => 'IST', 'arrival' => '15:00'],
+            ['from' => 'IST', 'departure' => '16:00', 'to' => 'PKX', 'arrival' => '20:00'],
+        ],
+    ];
+
+    data_get($flight, 'segments.{first}.arrival');
+
+    // 15:00
+
 <a name="method-data-set"></a>
 #### `data_set()`
 
@@ -1163,15 +1204,15 @@ $classes = Arr::toCssStyles($array);
 
     $currency = Number::currency(1000);
 
-    // $1,000
+    // $1,000.00
 
     $currency = Number::currency(1000, in: 'EUR');
 
-    // €1,000
+    // €1,000.00
 
     $currency = Number::currency(1000, in: 'EUR', locale: 'de');
 
-    // 1.000 €
+    // 1.000,00 €
 
 <a name="method-number-file-size"></a>
 #### `Number::fileSize()`
@@ -1253,6 +1294,24 @@ use Illuminate\Support\Number;
 
     // 21st
 
+<a name="method-number-pairs"></a>
+#### `Number::pairs()`
+
+The `Number::pairs` method generates an array of number pairs (sub-ranges) based on a specified range and step value. This method can be useful for dividing a larger range of numbers into smaller, manageable sub-ranges for things like pagination or batching tasks. The `pairs` method returns an array of arrays, where each inner array represents a pair (sub-range) of numbers:
+Метод `Number::pairs` генерирует массив пар чисел (поддиапазонов) на основе указанного диапазона и значения шага. Этот метод может быть полезен для разделения большего диапазона чисел на более мелкие, управляемые поддиапазоны для таких задач, как разбивка на страницы или пакетная обработка. Метод `pairs` возвращает массив массивов, где каждый внутренний массив представляет пару (поддиапазон) чисел:
+
+```php
+use Illuminate\Support\Number;
+
+$result = Number::pairs(25, 10);
+
+// [[1, 10], [11, 20], [21, 25]]
+
+$result = Number::pairs(25, 10, offset: 0);
+
+// [[0, 10], [10, 20], [20, 25]]
+```
+
 <a name="method-number-percentage"></a>
 #### `Number::percentage()`
 
@@ -1291,7 +1350,6 @@ use Illuminate\Support\Number;
 
     // quatre-vingt-huit
 
-
 Аргумент `after` позволяет указать значение, после которого все числа должны быть прописью:
 
     $number = Number::spell(10, after: 10);
@@ -1311,6 +1369,21 @@ use Illuminate\Support\Number;
     $number = Number::spell(10, until: 10);
 
     // 10
+
+<a name="method-number-trim"></a>
+#### `Number::trim()`
+
+Метод `Number::trim` удаляет все конечные нулевые цифры после десятичной точки заданного числа:
+
+    use Illuminate\Support\Number;
+
+    $number = Number::trim(12.0);
+
+    // 12
+
+    $number = Number::trim(12.30);
+
+    // 12.3
 
 <a name="method-number-use-locale"></a>
 #### `Number::useLocale()` {.collection-method}
@@ -1517,7 +1590,7 @@ return to_route('users.show', ['user' => 1], 302, ['X-Framework' => 'Laravel']);
 <a name="method-abort"></a>
 #### `abort()`
 
-Функция `abort` генерирует [HTTP-исключение](/docs/{{version}}/errors#http-exceptions), которое будет обработано [обработчиком исключения](/docs/{{version}}/errors#the-exception-handler):
+Функция `abort` генерирует [HTTP-исключение](/docs/{{version}}/errors#http-exceptions), которое будет обработано [обработчиком исключения](/docs/{{version}}/errors#handling-exceptions):
 
     abort(403);
 
@@ -1652,6 +1725,21 @@ return to_route('users.show', ['user' => 1], 302, ['X-Framework' => 'Laravel']);
 
     config(['app.debug' => true]);
 
+<a name="method-context"></a>
+#### `context()`
+
+Функция `context` получает значение из [текущего контекста](/docs/{{version}}/context). Может быть указано значение по умолчанию, которое возвращается, если ключ контекста не существует:
+
+    $value = context('trace_id');
+
+    $value = context('trace_id', $default);
+
+Вы можете установить значения контекста, передав массив пар ключ/значение:
+
+    use Illuminate\Support\Str;
+
+    context(['trace_id' => Str::uuid()->toString()]);
+
 <a name="method-cookie"></a>
 #### `cookie()`
 
@@ -1759,7 +1847,7 @@ $password = decrypt($value);
 @endfor
 ```
 
-По умолчанию функция `fake` будет использовать опцию `app.faker_locale` из файла конфигурации `config/app.php`. Однако вы также можете указать локализацию, передав ее в функцию `fake`. Для каждой локализации будет создан свой собственный экземпляр:
+По умолчанию функция `fake` будет использовать опцию `app.faker_locale` из файла конфигурации `config/app.php`. Обычно этот параметр конфигурации задается через переменную среды `APP_FAKER_LOCALE`. Вы также можете указать локализацию, передав ее в функцию `fake`. Для каждой локализации будет создан свой собственный экземпляр:
 
     fake('nl_NL')->name()
 
@@ -1793,6 +1881,19 @@ $password = decrypt($value);
 Также функции может быть передан массив контекстных данных:
 
     info('User login attempt failed.', ['id' => $user->id]);
+
+<a name="method-literal"></a>
+#### `literal()`
+
+Функция `literal` создает новый экземпляр [stdClass](https://www.php.net/manual/en/class.stdclass.php) с заданными именованными аргументами в качестве свойств:
+
+    $obj = literal(
+        name: 'Joe',
+        languages: ['PHP', 'Ruby'],
+    );
+
+    $obj->name; // 'Joe'
+    $obj->languages; // ['PHP', 'Ruby']
 
 <a name="method-logger"></a>
 #### `logger()`
@@ -1842,6 +1943,46 @@ $password = decrypt($value);
 
     {{ old('name', $user) }}
 
+<a name="method-once"></a>
+#### `once()`
+
+Функция `once` выполняет заданный обратный вызов и кэширует результат в памяти на время запроса. Любые последующие вызовы функции `once` с тем же обратным вызовом будут возвращать ранее кэшированный результат:
+
+    function random(): int
+    {
+        return once(function () {
+            return random_int(1, 1000);
+        });
+    }
+
+    random(); // 123
+    random(); // 123 (cached result)
+    random(); // 123 (cached result)
+
+Когда функция `once` выполняется из экземпляра объекта, кэшированный результат будет уникальным для этого экземпляра объекта:
+
+```php
+<?php
+
+class NumberService
+{
+    public function all(): array
+    {
+        return once(fn () => [1, 2, 3]);
+    }
+}
+
+$service = new NumberService;
+
+$service->all();
+$service->all(); // (cached result)
+
+$secondService = new NumberService;
+
+$secondService->all();
+$secondService->all(); // (cached result)
+```
+
 <a name="method-optional"></a>
 #### `optional()`
 
@@ -1878,7 +2019,7 @@ $password = decrypt($value);
 <a name="method-report"></a>
 #### `report()`
 
-Функция `report` сообщит об исключении, используя ваш [обработчик исключений](/docs/{{version}}/errors#the-exception-handler):
+Функция `report` сообщит об исключении, используя ваш [обработчик исключений](/docs/{{version}}/errors#handling-exceptions):
 
     report($e);
 
@@ -1889,7 +2030,7 @@ $password = decrypt($value);
 <a name="method-report-if"></a>
 #### `report_if()`
 
-Функция `report_if` будет сообщать об исключении с использованием вашего [обработчика исключений](/docs/{{version}}/errors#the-exception-handler), если заданное условие является `true`:
+Функция `report_if` будет сообщать об исключении с использованием вашего [обработчика исключений](/docs/{{version}}/errors#handling-exceptions), если заданное условие является `true`:
 
     report_if($shouldReport, $e);
 
@@ -1898,7 +2039,7 @@ $password = decrypt($value);
 <a name="method-report-unless"></a>
 #### `report_unless()`
 
-Функция `report_unless` будет сообщать об исключении с использованием вашего [обработчика исключений](/docs/{{version}}/errors#the-exception-handler), если заданное условие является `false`:
+Функция `report_unless` будет сообщать об исключении с использованием вашего [обработчика исключений](/docs/{{version}}/errors#handling-exceptions), если заданное условие является `false`:
 
     report_unless($reportingDisabled, $e);
 
@@ -1916,7 +2057,7 @@ $password = decrypt($value);
 <a name="method-rescue"></a>
 #### `rescue()`
 
-Функция `rescue` выполняет переданное замыкание и перехватывает любые исключения, возникающие во время его выполнения. Все перехваченные исключения будут отправлены вашему [обработчику исключений](/docs/{{version}}/errors#the-exception-handler); однако, обработка запроса будет продолжена:
+Функция `rescue` выполняет переданное замыкание и перехватывает любые исключения, возникающие во время его выполнения. Все перехваченные исключения будут отправлены вашему [обработчику исключений](/docs/{{version}}/errors#handling-exceptions); однако, обработка запроса будет продолжена:
 
     return rescue(function () {
         return $this->method();
@@ -2334,7 +2475,6 @@ $user = Pipeline::send($user)
 
 При тестировании кода, использующего класс `Sleep` или функции PHP `sleep` , выполнение вашего теста будет приостановлено. Как можно ожидать, это делает ваш пакет тестов значительно медленнее. Например, представьте, что вы тестируете следующий код:
 
-
     $waiting = /* ... */;
 
     $seconds = 1;
@@ -2345,33 +2485,57 @@ $user = Pipeline::send($user)
         $waiting = /* ... */;
     }
 
-
 Обычно тестирование этого кода займет как минимум одну секунду. К счастью, класс `Sleep` позволяет нам "подделывать" задержку, чтобы наш тестовый набор оставался быстрым:
 
-    public function test_it_waits_until_ready()
-    {
-        Sleep::fake();
+```php tab=Pest
+it('waits until ready', function () {
+    Sleep::fake();
 
-        // ...
-    }
+    // ...
+});
+```
 
+```php tab=PHPUnit
+public function test_it_waits_until_ready()
+{
+    Sleep::fake();
+
+    // ...
+}
+```
 
 При подделке класса `Sleep` реальная задержка выполнения обходится, что приводит к более быстрому тестированию.
 
 Как только класс `Sleep` был подделан, можно делать утверждения относительно ожидаемых "пауз". Для иллюстрации давайте представим, что мы тестируем код, который приостанавливает выполнение три раза, при этом каждая задержка увеличивается на одну секунду. Используя метод `assertSequence`, мы можем проверить, что наш код "спал" нужное количество времени, сохраняя при этом скорость выполнения теста:
 
-    public function test_it_checks_if_ready_four_times()
-    {
-        Sleep::fake();
+```php tab=Pest
+it('checks if ready three times', function () {
+    Sleep::fake();
 
-        // ...
+    // ...
 
-        Sleep::assertSequence([
-            Sleep::for(1)->second(),
-            Sleep::for(2)->seconds(),
-            Sleep::for(3)->seconds(),
-        ]);
-    }
+    Sleep::assertSequence([
+        Sleep::for(1)->second(),
+        Sleep::for(2)->seconds(),
+        Sleep::for(3)->seconds(),
+    ]);
+}
+```
+
+```php tab=PHPUnit
+public function test_it_checks_if_ready_three_times()
+{
+    Sleep::fake();
+
+    // ...
+
+    Sleep::assertSequence([
+        Sleep::for(1)->second(),
+        Sleep::for(2)->seconds(),
+        Sleep::for(3)->seconds(),
+    ]);
+}
+```
 
 Конечно же, класс Sleep предоставляет и другие утверждения, которые вы можете использовать при тестировании:
 
@@ -2395,7 +2559,6 @@ $user = Pipeline::send($user)
 
 Иногда бывает полезно выполнять действие при каждом имитированном ожидании в коде вашего приложения. Для этого вы можете предоставить обратный вызов методу `whenFakingSleep`. В следующем примере мы используем помощники Laravel по [манипулированию временем](/docs/{{version}}/mocking#interacting-with-time), чтобы мгновенно продвинуть время на продолжительность каждого ожидания:
 
-
 ```php
 use Carbon\CarbonInterval as Duration;
 
@@ -2407,6 +2570,18 @@ Sleep::whenFakingSleep(function (Duration $duration) {
     // Progress time when faking sleep...
     $this->travel($duration->totalMilliseconds)->milliseconds();
 });
+```
+
+Поскольку прогрессирование времени является общим требованием, метод `fake` принимает аргумент `syncWithCarbon`, чтобы синхронизировать Carbon во время сна в тесте:
+
+```php
+Sleep::fake(syncWithCarbon: true);
+
+$start = now();
+
+Sleep::for(1)->second();
+
+$start->diffForHumans(); // 1 second ago
 ```
 
 Класс `Sleep` используется внутри Laravel при приостановке выполнения. Например, помощник [retry](#method-retry) использует класс `Sleep` при задержке, что обеспечивает лучшую тестируемость при использовании данного помощника.
