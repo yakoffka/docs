@@ -139,7 +139,6 @@ BROADCAST_CONNECTION=ably
 npm install --save-dev laravel-echo pusher-js
 ```
 
-Once Echo is installed, you are ready to create a fresh Echo instance in your application's JavaScript. A great place to do this is at the bottom of the `resources/js/bootstrap.js` file that is included with the Laravel framework. By default, an example Echo configuration is already included in this file - you simply need to uncomment it and update the `broadcaster` configuration option to `reverb`:
 После установки Echo вы готовы создать новый экземпляр Echo в JavaScript вашего приложения. Отличное место для этого — внизу файла `resources/js/bootstrap.js`, который входит в состав фреймворка Laravel. По умолчанию в этот файл уже включен пример конфигурации Echo — вам просто нужно раскомментировать его и обновить параметр конфигурации `broadcaster` на `reverb`:
 
 ```js
