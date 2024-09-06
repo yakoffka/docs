@@ -294,7 +294,6 @@ $table->double('amount');
 $table->float('amount', precision: 53);
 ```
 
-The `unsignedDecimal`, `unsignedDouble`, and `unsignedFloat` methods have been removed, as the unsigned modifier for these column types has been deprecated by MySQL, and was never standardized on other database systems. However, if you wish to continue using the deprecated unsigned attribute for these column types, you may chain the `unsigned` method onto the column's definition:
 Методы `unsignedDecimal`, `unsignedDouble` и `unsignedFloat` были удалены, поскольку модификатор `unsigned` для этих типов столбцов устарел в MySQL и никогда не стандартизировался в других системах баз данных. Однако, если вы хотите и дальше использовать устаревший беззнаковый атрибут для этих типов столбцов, вы можете связать метод `unsigned` с определением столбца:
 
 ```php
