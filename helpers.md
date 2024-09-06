@@ -540,7 +540,6 @@ Laravel содержит множество глобальных «вспомо�
 <a name="method-array-map-spread"></a>
 #### `Arr::mapSpread()`
 
-The `Arr::mapSpread` method iterates over the array, passing each nested item value into the given closure. The closure is free to modify the item and return it, thus forming a new array of modified items:
 Метод `Arr::mapSpread` выполняет итерацию по массиву, передавая каждое значение вложенного элемента в данное замыкание. Замыкание может изменять элемент и возвращать его, формируя таким образом новый массив измененных элементов:
 
     use Illuminate\Support\Arr;
@@ -1297,7 +1296,6 @@ use Illuminate\Support\Number;
 <a name="method-number-pairs"></a>
 #### `Number::pairs()`
 
-The `Number::pairs` method generates an array of number pairs (sub-ranges) based on a specified range and step value. This method can be useful for dividing a larger range of numbers into smaller, manageable sub-ranges for things like pagination or batching tasks. The `pairs` method returns an array of arrays, where each inner array represents a pair (sub-range) of numbers:
 Метод `Number::pairs` генерирует массив пар чисел (поддиапазонов) на основе указанного диапазона и значения шага. Этот метод может быть полезен для разделения большего диапазона чисел на более мелкие, управляемые поддиапазоны для таких задач, как разбивка на страницы или пакетная обработка. Метод `pairs` возвращает массив массивов, где каждый внутренний массив представляет пару (поддиапазон) чисел:
 
 ```php
