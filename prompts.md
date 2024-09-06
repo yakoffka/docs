@@ -1,5 +1,5 @@
 ---
-git: d55b27a9a653a15abc97a431814e0ec6e486dc99
+git: de98ca780d45beb9772ba7febf85e6de6531b06a
 ---
 
 # Prompts (Подсказки)
@@ -89,6 +89,84 @@ $name = text(
 
 Замыкание получит введенное значение и может вернуть сообщение об ошибке или `null`, если валидация прошла успешно.
 
+Альтернативно вы можете использовать возможности [валидатора](/docs/{{version}}/validation) Laravel. Для этого предоставьте в аргумент `validate` массив, содержащий имя атрибута и желаемые правила проверки:
+
+```php
+$name = text(
+    label: 'What is your name?',
+    validate: ['name' => 'required|max:255|unique:users']
+);
+```
+
+<a name="textarea"></a>
+### Textarea
+
+Функция `textarea` предложит пользователю задать заданный вопрос, примет его ввод через многострочную текстовую область, а затем вернет его:
+
+```php
+use function Laravel\Prompts\textarea;
+
+$story = textarea('Tell me a story.');
+```
+
+Вы также можете включить текст-заполнитель, значение по умолчанию и информационную подсказку:
+
+```php
+$story = textarea(
+    label: 'Tell me a story.',
+    placeholder: 'This is a story about...',
+    hint: 'This will be displayed on your profile.'
+);
+```
+
+<a name="textarea-required"></a>
+#### Обязательные значения
+
+Если вам требуется, чтобы значение было введено, то вы можете передать аргумент `required`:
+
+```php
+$story = textarea(
+    label: 'Tell me a story.',
+    required: true
+);
+```
+
+Если вы хотите настроить сообщение проверки, вы также можете передать строку:
+
+```php
+$story = textarea(
+    label: 'Tell me a story.',
+    required: 'A story is required.'
+);
+```
+
+<a name="textarea-validation"></a>
+#### Дополнительная проверка
+
+Наконец, если вы хотите выполнить дополнительную логику проверки, вы можете передать замыкание аргументу `validate`:
+
+```php
+$story = textarea(
+    label: 'Tell me a story.',
+    validate: fn (string $value) => match (true) {
+        strlen($value) < 250 => 'The story must be at least 250 characters.',
+        strlen($value) > 10000 => 'The story must not exceed 10,000 characters.',
+        default => null
+    }
+);
+```
+
+Замыкание получит введенное значение и может вернуть сообщение об ошибке или значение `null`, если проверка пройдет успешно.
+
+Альтернативно вы можете использовать возможности [валидатора](/docs/{{version}}/validation) Laravel. Для этого предоставьте в аргумент `validate` массив, содержащий имя атрибута и желаемые правила проверки:
+
+```php
+$story = textarea(
+    label: 'Tell me a story.',
+    validate: ['story' => 'required|max:10000']
+);
+```
+
 <a name="password"></a>
 ### Пароль
 
@@ -147,6 +225,15 @@ $password = password(
 
 Замыкание получит введенное значение и может вернуть сообщение об ошибке или `null`, если валидация проходит успешно.
 
+Альтернативно вы можете использовать возможности [валидатора](/docs/{{version}}/validation) Laravel. Для этого предоставьте в аргумент `validate` массив, содержащий имя атрибута и желаемые правила проверки:
+
+```php
+$password = password(
+    label: 'What is your password?',
+    validate: ['password' => 'min:8']
+);
+```
+
 <a name="confirm"></a>
 ### Подтверждение
 
@@ -200,8 +287,8 @@ $confirmed = confirm(
 use function Laravel\Prompts\select;
 
 $role = select(
-    'What role should the user have?',
-    ['Member', 'Contributor', 'Owner'],
+    label: 'What role should the user have?',
+    options: ['Member', 'Contributor', 'Owner']
 );
 ```
 
@@ -224,7 +311,7 @@ $role = select(
     options: [
         'member' => 'Member',
         'contributor' => 'Contributor',
-        'owner' => 'Owner'
+        'owner' => 'Owner',
     ],
     default: 'owner'
 );
@@ -241,7 +328,7 @@ $role = select(
 ```
 
 <a name="select-validation"></a>
-#### Валидация
+#### Дополнительная валидация
 
 В отличие от других, функция `select` не принимает аргумент `required`, потому что невозможно выбрать ничего. Однако, вы можете передать замыкание в аргумент `validate`, если вам нужно представить вариант, но предотвратить его выбор:
 
@@ -251,7 +338,7 @@ $role = select(
     options: [
         'member' => 'Member',
         'contributor' => 'Contributor',
-        'owner' => 'Owner'
+        'owner' => 'Owner',
     ],
     validate: fn (string $value) =>
         $value === 'owner' && User::where('role', 'owner')->exists()
@@ -271,8 +358,8 @@ $role = select(
 use function Laravel\Prompts\multiselect;
 
 $permissions = multiselect(
-    'What permissions should be assigned?',
-    ['Read', 'Create', 'Update', 'Delete']
+    label: 'What permissions should be assigned?',
+    options: ['Read', 'Create', 'Update', 'Delete']
 );
 ```
 
@@ -291,14 +378,14 @@ $permissions = multiselect(
 
 Вы также можете передать ассоциативный массив в аргумент `options`, чтобы возвращались ключи выбранных вариантов вместо их значений:
 
-```
+```php
 $permissions = multiselect(
     label: 'What permissions should be assigned?',
     options: [
         'read' => 'Read',
         'create' => 'Create',
         'update' => 'Update',
-        'delete' => 'Delete'
+        'delete' => 'Delete',
     ],
     default: ['read', 'create']
 );
@@ -323,7 +410,7 @@ $categories = multiselect(
 $categories = multiselect(
     label: 'What categories should be assigned?',
     options: Category::pluck('name', 'id'),
-    required: true,
+    required: true
 );
 ```
 
@@ -333,23 +420,23 @@ $categories = multiselect(
 $categories = multiselect(
     label: 'What categories should be assigned?',
     options: Category::pluck('name', 'id'),
-    required: 'You must select at least one category',
+    required: 'You must select at least one category'
 );
 ```
 
 <a name="multiselect-validation"></a>
-#### Валидация
+#### Дополнительная валидация
 
 Вы можете передать замыкание в аргумент `validate`, если вам нужно представить вариант, но предотвратить его выбор:
 
-```
+```php
 $permissions = multiselect(
     label: 'What permissions should the user have?',
     options: [
         'read' => 'Read',
         'create' => 'Create',
         'update' => 'Update',
-        'delete' => 'Delete'
+        'delete' => 'Delete',
     ],
     validate: fn (array $values) => ! in_array('read', $values)
         ? 'All users require the read permission.'
@@ -374,8 +461,8 @@ $name = suggest('What is your name?', ['Taylor', 'Dayle']);
 
 ```php
 $name = suggest(
-    'What is your name?',
-    fn ($value) => collect(['Taylor', 'Dayle'])
+    label: 'What is your name?',
+    options: fn ($value) => collect(['Taylor', 'Dayle'])
         ->filter(fn ($name) => Str::contains($name, $value, ignoreCase: true))
 )
 ```
@@ -434,6 +521,16 @@ $name = suggest(
 
 Замыкание получит введенное значение и может вернуть сообщение об ошибке или `null`, если валидация проходит успешно.
 
+Альтернативно вы можете использовать возможности [валидатора](/docs/{{version}}/validation) Laravel. Для этого предоставьте в аргумент `validate` массив, содержащий имя атрибута и желаемые правила проверки:
+
+```php
+$name = suggest(
+    label: 'What is your name?',
+    options: ['Taylor', 'Dayle'],
+    validate: ['name' => 'required|min:3|max:255']
+);
+```
+
 <a name="search"></a>
 ### Поиск
 
@@ -443,9 +540,9 @@ $name = suggest(
 use function Laravel\Prompts\search;
 
 $id = search(
-    'Search for the user that should receive the mail',
-    fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+    label: 'Search for the user that should receive the mail',
+    options: fn (string $value) => strlen($value) > 0
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : []
 );
 ```
@@ -459,7 +556,7 @@ $id = search(
     label: 'Search for the user that should receive the mail',
     placeholder: 'E.g. Taylor Otwell',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     hint: 'The user will receive an email immediately.'
 );
@@ -471,14 +568,14 @@ $id = search(
 $id = search(
     label: 'Search for the user that should receive the mail',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     scroll: 10
 );
 ```
 
 <a name="search-validation"></a>
-#### Валидация
+#### Дополнительная валидация
 
 Если вы хотите выполнить дополнительную логику валидации, вы можете передать замыкание в аргумент `validate`:
 
@@ -486,7 +583,7 @@ $id = search(
 $id = search(
     label: 'Search for the user that should receive the mail',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     validate: function (int|string $value) {
         $user = User::findOrFail($value);
@@ -511,7 +608,7 @@ use function Laravel\Prompts\multisearch;
 $ids = multisearch(
     'Search for the users that should receive the mail',
     fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : []
 );
 ```
@@ -525,7 +622,7 @@ $ids = multisearch(
     label: 'Search for the users that should receive the mail',
     placeholder: 'E.g. Taylor Otwell',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     hint: 'The user will receive an email immediately.'
 );
@@ -537,7 +634,7 @@ $ids = multisearch(
 $ids = multisearch(
     label: 'Search for the users that should receive the mail',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     scroll: 10
 );
@@ -550,11 +647,11 @@ $ids = multisearch(
 
 ```php
 $ids = multisearch(
-    'Search for the users that should receive the mail',
-    fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+    label: 'Search for the users that should receive the mail',
+    options: fn (string $value) => strlen($value) > 0
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
-    required: true,
+    required: true
 );
 ```
 
@@ -562,16 +659,16 @@ $ids = multisearch(
 
 ```php
 $ids = multisearch(
-    'Search for the users that should receive the mail',
-    fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+    label: 'Search for the users that should receive the mail',
+    options: fn (string $value) => strlen($value) > 0
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     required: 'You must select at least one user.'
 );
 ```
 
 <a name="multisearch-validation"></a>
-#### Валидация
+#### Дополнительная валидация
 
 Если вам нужно выполнить дополнительную логику валидации, вы можете передать замыкание в аргумент `validate`:
 
@@ -579,10 +676,10 @@ $ids = multisearch(
 $ids = multisearch(
     label: 'Search for the users that should receive the mail',
     options: fn (string $value) => strlen($value) > 0
-        ? User::where('name', 'like', "%{$value}%")->pluck('name', 'id')->all()
+        ? User::whereLike('name', "%{$value}%")->pluck('name', 'id')->all()
         : [],
     validate: function (array $values) {
-        $optedOut = User::where('name', 'like', '%a%')->findMany($values);
+        $optedOut = User::whereLike('name', '%a%')->findMany($values);
 
         if ($optedOut->isNotEmpty()) {
             return $optedOut->pluck('name')->join(', ', ', and ').' have opted out.';
@@ -602,6 +699,78 @@ $ids = multisearch(
 use function Laravel\Prompts\pause;
 
 pause('Press ENTER to continue.');
+```
+
+<a name="transforming-input-before-validation"></a>
+## Преобразование входных данных перед проверкой
+
+Иногда вам может потребоваться преобразовать вводимые данные до того, как произойдет проверка. Например, вы можете удалить пробелы из любых предоставленных строк. Для этого многие функции приглашения предоставляют аргумент `transform`, который принимает замыкание:
+
+```php
+$name = text(
+    label: 'What is your name?',
+    transform: fn (string $value) => trim($value),
+    validate: fn (string $value) => match (true) {
+        strlen($value) < 3 => 'The name must be at least 3 characters.',
+        strlen($value) > 255 => 'The name must not exceed 255 characters.',
+        default => null
+    }
+);
+```
+
+<a name="forms"></a>
+## Формы
+
+Часто у вас будет несколько подсказок, которые будут отображаться последовательно для сбора информации перед выполнением дополнительных действий. Вы можете использовать функцию `form` для создания сгруппированного набора подсказок, которые пользователь должен выполнить:
+
+```php
+use function Laravel\Prompts\form;
+
+$responses = form()
+    ->text('What is your name?', required: true)
+    ->password('What is your password?', validate: ['password' => 'min:8'])
+    ->confirm('Do you accept the terms?')
+    ->submit();
+```
+
+Метод `submit` вернет числовой индексированный массив, содержащий все ответы на запросы формы. Однако вы можете указать имя для каждого приглашения с помощью аргумента `name`. Если указано имя, доступ к ответу на указанное приглашение можно получить по этому имени:
+
+```php
+use App\Models\User;
+use function Laravel\Prompts\form;
+
+$responses = form()
+    ->text('What is your name?', required: true, name: 'name')
+    ->password(
+        label: 'What is your password?',
+        validate: ['password' => 'min:8'],
+        name: 'password'
+    )
+    ->confirm('Do you accept the terms?')
+    ->submit();
+
+User::create([
+    'name' => $responses['name'],
+    'password' => $responses['password'],
+]);
+```
+
+Основным преимуществом использования функции `form` является возможность для пользователя вернуться к предыдущим запросам в форме с помощью `CTRL + U`. Это позволяет пользователю исправлять ошибки или изменять выбор без необходимости отмены и перезапуска всей формы.
+
+Если вам нужен более детальный контроль над подсказкой в ​​форме, вы можете вызвать метод `add` вместо прямого вызова одной из функций подсказки. Методу `add` передаются все предыдущие ответы, предоставленные пользователем:
+
+```php
+use function Laravel\Prompts\form;
+use function Laravel\Prompts\outro;
+
+$responses = form()
+    ->text('What is your name?', required: true, name: 'name')
+    ->add(function ($responses) {
+        return text("How old are you, {$responses['name']}?");
+    }, name: 'age')
+    ->submit();
+
+outro("Your name is {$responses['name']} and you are {$responses['age']} years old.");
 ```
 
 <a name="informational-messages"></a>
@@ -624,8 +793,8 @@ info('Package installed successfully.');
 use function Laravel\Prompts\table;
 
 table(
-    ['Name', 'Email'],
-    User::all(['name', 'email'])
+    headers: ['Name', 'Email'],
+    rows: User::all(['name', 'email'])->toArray()
 );
 ```
 
@@ -638,8 +807,8 @@ table(
 use function Laravel\Prompts\spin;
 
 $response = spin(
-    fn () => Http::get('http://example.com'),
-    'Fetching response...'
+    message: 'Fetching response...',
+    callback: fn () => Http::get('http://example.com')
 );
 ```
 
@@ -657,13 +826,13 @@ use function Laravel\Prompts\progress;
 $users = progress(
     label: 'Updating users',
     steps: User::all(),
-    callback: fn ($user) => $this->performTask($user),
+    callback: fn ($user) => $this->performTask($user)
 );
 ```
 
 Функция `progress` действует как функция map и вернет массив, содержащий возвращаемое значение каждой итерации вашего обратного вызова.
 
-Обратный вызов также может принимать экземпляр `\Laravel\Prompts\Progress`, что позволяет вам изменять метку и подсказку на каждой итерации:
+Обратный вызов также может принимать экземпляр `Laravel\Prompts\Progress`, что позволяет вам изменять метку и подсказку на каждой итерации:
 
 ```php
 $users = progress(
@@ -676,7 +845,7 @@ $users = progress(
 
         return $this->performTask($user);
     },
-    hint: 'This may take some time.',
+    hint: 'This may take some time.'
 );
 ```
 
@@ -716,7 +885,7 @@ $progress->finish();
 
 Laravel Prompts поддерживает macOS, Linux и Windows с использованием WSL. Из-за ограничений в версии PHP для Windows в настоящее время невозможно использовать Laravel Prompts на Windows вне WSL.
 
-По этой причине Laravel Prompts поддерживает откат к альтернативной реализации, такой как [Symfony Console Question Helper](https://symfony.com/doc/current/components/console/helpers/questionhelper.html).
+По этой причине Laravel Prompts поддерживает откат к альтернативной реализации, такой как [Symfony Console Question Helper](https://symfony.com/doc/7.0/components/console/helpers/questionhelper.html).
 
 > [!NOTE]  
 > При использовании Laravel Prompts с фреймворком Laravel резервные варианты для каждого запроса настроены для вас и будут автоматически включены в неподдерживаемых окружениях.
@@ -750,7 +919,9 @@ TextPrompt::fallbackUsing(function (TextPrompt $prompt) use ($input, $output) {
     $question = (new Question($prompt->label, $prompt->default ?: null))
         ->setValidator(function ($answer) use ($prompt) {
             if ($prompt->required && $answer === null) {
-                throw new \RuntimeException(is_string($prompt->required) ? $prompt->required : 'Required.');
+                throw new \RuntimeException(
+                    is_string($prompt->required) ? $prompt->required : 'Required.'
+                );
             }
 
             if ($prompt->validate) {
