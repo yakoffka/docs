@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: d8ab24c9a1724aa7ac413ee72f864049b90bba40
 ---
 
 # Кэширование
@@ -14,9 +14,9 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 <a name="configuration"></a>
 ## Конфигурирование
 
-Файл конфигурации кеша вашего приложения находится в `config/cache.php`. В этом файле вы можете указать, какой драйвер кеша вы хотите использовать по умолчанию для всего приложении. Laravel из коробки поддерживает популярные механизмы кеширования, такие как [Memcached](https://memcached.org), [Redis](https://redis.io), [DynamoDB](https://aws.amazon.com/dynamodb) и реляционные базы данных. Кроме того, доступен драйвер кеширования на основе файлов, в то время как драйверы `array` и `null` предоставляют удобные механизмы кеширования для ваших автоматических тестов.
+Файл конфигурации кеша вашего приложения находится в `config/cache.php`. В этом файле вы можете указать, какой хранилище кеша вы хотите использовать по умолчанию для всего приложении. Laravel из коробки поддерживает популярные механизмы кеширования, такие как [Memcached](https://memcached.org), [Redis](https://redis.io), [DynamoDB](https://aws.amazon.com/dynamodb) и реляционные базы данных. Кроме того, доступен драйвер кеширования на основе файлов, в то время как драйверы `array` и `null` предоставляют удобные механизмы кеширования для ваших автоматических тестов.
 
-Файл конфигурации кеша также содержит различные другие параметры, которые описаны в файле, поэтому обязательно изучите эти параметры. По умолчанию Laravel настроен на использование драйвера кеширования файлов, который хранит сериализованные кешированные объекты в файловой системе сервера. Для более крупных приложений рекомендуется использовать более надежный драйвер, например Memcached или Redis. Вы даже можете настроить несколько конфигураций кеша для одного и того же драйвера.
+Файл конфигурации кэша также содержит множество других параметров, которые вы можете просмотреть. По умолчанию Laravel настроен на использование драйвера кэша `database`, который сохраняет сериализованные кэшированные объекты в базе данных вашего приложения.
 
 <a name="driver-prerequisites"></a>
 ### Предварительная подготовка драйверов
@@ -24,16 +24,13 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 <a name="prerequisites-database"></a>
 #### Предварительная подготовка драйвера на основе базы данных
 
-При использовании драйвера кеша `database` вам нужно будет настроить таблицу для хранения элементов кеша. Вы найдете пример объявления `Schema` ниже:
+При использовании драйвера кэша `database` вам понадобится таблица базы данных, содержащая данные кэша. Обычно это включено в стандартный файл Laravel `0001_01_01_000001_create_cache_table.php` [миграции базы данных](/docs/{{version}}/migrations); однако, если ваше приложение не содержит этой миграции, вы можете использовать Artisan-команду `make:cache-table` для ее создания:
 
-    Schema::create('cache', function (Blueprint $table) {
-        $table->string('key')->unique();
-        $table->text('value');
-        $table->integer('expiration');
-    });
+```shell
+php artisan make:cache-table
 
-> [!NOTE]
-> Вы также можете использовать команду `php artisan cache:table` Artisan для генерации миграции с правильной схемой.
+php artisan migrate
+```
 
 <a name="memcached"></a>
 #### Предварительная подготовка драйвера на основе Memcached
@@ -41,6 +38,8 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 Для использования драйвера Memcached требуется установить [пакет Memcached PECL](https://pecl.php.net/package/memcached). Вы можете перечислить все ваши серверы Memcached в файле конфигурации `config/cache.php`. Этот файл уже содержит запись `memcached.servers` для начала:
 
     'memcached' => [
+        // ...
+
         'servers' => [
             [
                 'host' => env('MEMCACHED_HOST', '127.0.0.1'),
@@ -54,25 +53,49 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
     'memcached' => [
         [
-            'host' => '/var/run/memcached/memcached.sock',
-            'port' => 0,
-            'weight' => 100
+        // ...
+
+        'servers' => [
+            [
+                'host' => '/var/run/memcached/memcached.sock',
+                'port' => 0,
+                'weight' => 100
+            ],
         ],
     ],
 
 <a name="redis"></a>
 #### Предварительная подготовка драйвера на основе Redis
 
-Перед использованием драйвера кеша Redis, вам нужно будет либо установить расширение PHP PhpRedis через PECL, либо установить пакет `predis/predis` (~ 1.0) через Composer. [Laravel Sail](/docs/{{version}}/sail) уже включает это расширение. Кроме того, на официальных платформах развертывания Laravel, таких как [Laravel Forge](https://forge.laravel.com) и [Laravel Vapor](https://vapor.laravel.com), расширение PhpRedis установлено по умолчанию.
+Перед использованием драйвера кеша Redis, вам нужно будет либо установить расширение PHP PhpRedis через PECL, либо установить пакет `predis/predis` (~ 2.0) через Composer. [Laravel Sail](/docs/{{version}}/sail) уже включает это расширение. Кроме того, на официальных платформах развертывания Laravel, таких как [Laravel Forge](https://forge.laravel.com) и [Laravel Vapor](https://vapor.laravel.com), расширение PhpRedis установлено по умолчанию.
 
 Для получения дополнительной информации о настройке Redis обратитесь к его [странице документации Laravel](/docs/{{version}}/redis#configuration).
 
 <a name="dynamodb"></a>
 #### Предварительная подготовка драйвера на основе DynamoDB
 
-Перед использованием драйвера кэша [DynamoDB](https://aws.amazon.com/dynamodb) необходимо создать таблицу DynamoDB для хранения всех кэшированных данных. Название таблицы должно совпадать с `stores.dynamodb.table` в конфигурационном файле `cache` вашего приложения. Обычно это `cache`.
+Перед использованием драйвера кэша [DynamoDB](https://aws.amazon.com/dynamodb) необходимо создать таблицу DynamoDB для хранения всех кэшированных данных. Обычно это `cache`. Название таблицы должно совпадать с `stores.dynamodb.table` в конфигурационном файле `cache`. Имя таблицы также можно задать с помощью переменной среды `DYNAMODB_CACHE_TABLE`.
 
 Эта таблица также должна иметь строковый ключ раздела с именем, соответствующим значению элемента конфигурации `stores.dynamodb.attributes.key` в конфигурационном файле `cache`. По умолчанию это `key`.
+
+Затем установите AWS SDK, чтобы ваше приложение Laravel могло взаимодействовать с DynamoDB:
+
+```shell
+composer require aws/aws-sdk-php
+```
+
+Кроме того, вам следует убедиться, что указаны значения для параметров конфигурации хранилища кэша DynamoDB. Обычно эти параметры, такие как `AWS_ACCESS_KEY_ID` и `AWS_SECRET_ACCESS_KEY`, должны быть определены в файле конфигурации `.env` вашего приложения:
+
+```php
+'dynamodb' => [
+    'driver' => 'dynamodb',
+    'key' => env('AWS_ACCESS_KEY_ID'),
+    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+    'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
+    'table' => env('DYNAMODB_CACHE_TABLE', 'cache'),
+    'endpoint' => env('DYNAMODB_ENDPOINT'),
+],
+```
 
 <a name="cache-usage"></a>
 ## Управление кешем приложения
@@ -174,6 +197,8 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
     $value = Cache::pull('key');
 
+    $value = Cache::pull('key', 'default');
+
 <a name="storing-items-in-the-cache"></a>
 ### Сохранение элементов в кеше
 
@@ -255,23 +280,6 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 > [!WARNING]
 > Чтобы использовать этот функционал, ваше приложение должно использовать драйвер кеша `memcached`, `redis`, `dynamodb`, `database`, `file`, или `array` в качестве драйвера кеша по умолчанию для вашего приложения. Кроме того, все серверы должны взаимодействовать с одним и тем же центральным сервером кеширования.
 
-<a name="lock-driver-prerequisites"></a>
-### Предварительная подготовка драйверов
-
-<a name="atomic-locks-prerequisites-database"></a>
-#### Предварительная подготовка драйвера на основе базы данных для атомарных блокировок
-
-При использовании драйвера кеша `database` вам необходимо настроить таблицу, в которой будут храниться блокировки кеша вашего приложения. Вы найдете пример объявления `Schema` ниже:
-
-    Schema::create('cache_locks', function (Blueprint $table) {
-        $table->string('key')->primary();
-        $table->string('owner');
-        $table->integer('expiration');
-    });
-
-> [!NOTE]  
-> Если вы использовали команду Artisan `cache:table` для создания таблицы драйвера кеша `database`, миграция, созданная этой командой, уже содержит определение таблицы `cache_locks`.
-
 <a name="managing-locks"></a>
 ### Управление блокировками
 
@@ -306,7 +314,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
     } catch (LockTimeoutException $e) {
         // Невозможно получить блокировку ...
     } finally {
-        $lock?->release();
+        $lock->release();
     }
 
 Приведенный выше пример можно упростить, передав замыкание методу `block`. Когда замыкание передается этому методу, Laravel будет пытаться получить блокировку на указанное количество секунд и автоматически снимет блокировку, как только замыкание будет выполнено:
@@ -414,41 +422,26 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 Первым аргументом, передаваемым методу `extend`, является имя драйвера. Оно будет соответствовать вашему параметру `driver` в файле конфигурации `config/cache.php`. Второй аргумент – это замыкание, которое должно возвращать экземпляр `Illuminate\Cache\Repository`. Замыкание будет передано экземпляру `$app`, который является экземпляром [контейнера служб](/docs/{{version}}/container).
 
-После регистрации расширения обновите параметр `driver` в файле конфигурации `config/cache.php`, указав имя вашего расширения.
+После регистрации расширения обновите переменную среды `CACHE_STORE` или опцию `default` в файле конфигурации вашего приложения `config/cache.php`, указав имя вашего расширения.
 
 <a name="events"></a>
 ## События
 
-Чтобы выполнить код для каждой операции с кешем, вы можете прослушивать [события](/docs/{{version}}/events), запускаемые кешем. Как правило, вы должны поместить эти слушатели событий в класс `App\Providers\EventServiceProvider` приложения:
+Чтобы выполнить код при каждой операции с кэшем, вы можете прослушивать [события](/docs/{{version}}/events), запускаемые кэшем:
 
-    use App\Listeners\LogCacheHit;
-    use App\Listeners\LogCacheMissed;
-    use App\Listeners\LogKeyForgotten;
-    use App\Listeners\LogKeyWritten;
-    use Illuminate\Cache\Events\CacheHit;
-    use Illuminate\Cache\Events\CacheMissed;
-    use Illuminate\Cache\Events\KeyForgotten;
-    use Illuminate\Cache\Events\KeyWritten;
+| Наименование события                   |
+| -------------------------------------- |
+| `Illuminate\Cache\Events\CacheHit`     |
+| `Illuminate\Cache\Events\CacheMissed`  |
+| `Illuminate\Cache\Events\KeyForgotten` |
+| `Illuminate\Cache\Events\KeyWritten`   |
 
-    /**
-     * Карта слушателей событий приложения.
-     *
-     * @var array
-     */
-     protected $listen = [
-        CacheHit::class => [
-            LogCacheHit::class,
-        ],
+Чтобы повысить производительность, вы можете отключить события кэширования, установив для параметра конфигурации `events` значение `false` для данного хранилища кэша в файле конфигурации `config/cache.php` вашего приложения:
 
-        CacheMissed::class => [
-            LogCacheMissed::class,
-        ],
-
-        KeyForgotten::class => [
-            LogKeyForgotten::class,
-        ],
-
-        KeyWritten::class => [
-            LogKeyWritten::class,
-        ],
-    ];
+```php
+'database' => [
+    'driver' => 'database',
+    // ...
+    'events' => false,
+],
+```
