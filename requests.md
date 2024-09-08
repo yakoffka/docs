@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: bb4650831ec4567c07d72f7a9949a95f90c04035
 ---
 
 # HTTP-запросы
@@ -287,7 +287,7 @@ composer require nyholm/psr7
 <a name="retrieving-stringable-input-values"></a>
 #### Получение экземпляра Stringable из Input
 
-Вместо получения входных данных запроса в виде примитивной `string` вы можете использовать метод `string` для получения данных запроса как экземпляра [`Illuminate\Support\Stringable`](/docs/{{version}}/helpers#fluent-strings):
+Вместо получения входных данных запроса в виде примитивной `string` вы можете использовать метод `string` для получения данных запроса как экземпляра [`Illuminate\Support\Stringable`](/docs/{{version}}/strings):
 
     $name = $request->string('name')->trim();
 
@@ -414,7 +414,7 @@ composer require nyholm/psr7
         // ...
     }
 
-    $request->whenMissing('name', function (array $input) {
+    $request->whenMissing('name', function () {
         // Значение "name" пропущено...
     }, function () {
         // Значение "name" присутствует...
@@ -454,11 +454,11 @@ Laravel позволяет вам сохранить входные данные
 
 Так как вам часто нужно выполнять кратковременное сохранение входных данных в сессии, а затем перенаправлять на предыдущую страницу, вы можете легко связать сохранение данных с перенаправлением, используя метод `withInput`:
 
-    return redirect('form')->withInput();
+    return redirect('/form')->withInput();
 
     return redirect()->route('user.create')->withInput();
 
-    return redirect('form')->withInput(
+    return redirect('/form')->withInput(
         $request->except('password')
     );
 
@@ -486,33 +486,33 @@ Laravel также содержит глобального помощника `o
 <a name="input-trimming-and-normalization"></a>
 ## Обрезание и нормализация значений полей ввода
 
-По умолчанию Laravel содержит посредников `App\Http\Middleware\TrimStrings` и `App\Http\Middleware\ConvertEmptyStringsToNull` в глобальном стеке посредников вашего приложения. Эти посредники перечислены в классе `App\Http\Kernel`. Первый из упомянутых посредников будет автоматически обрезать все входящие строковые поля запроса, а второй – конвертировать любые пустые строковые поля в `null`. Это позволяет вам не беспокоиться об этих проблемах нормализации в ваших маршрутах и контроллерах.
+По умолчанию Laravel содержит посредников `Illuminate\Foundation\Http\Middleware\TrimStrings` и `Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull` в глобальном стеке посредников вашего приложения. Первый из упомянутых посредников будет автоматически обрезать все входящие строковые поля запроса, а второй – конвертировать любые пустые строковые поля в `null`. Это позволяет вам не беспокоиться об этих проблемах нормализации в ваших маршрутах и контроллерах.
 
 #### Отключение нормализации значений полей ввода
 
-Если вы хотите отключить это поведение, вы можете удалить два посредника из стека посредников вашего приложения, удалив их из свойства `$middleware` вашего класса `App\Http\Kernel`.
+Если вы хотите отключить это поведение для всех запросов, вы можете удалить два посредника из стека посредников вашего приложения, вызвав метод `$middleware->remove` в файле `bootstrap/app.php` вашего приложения:
 
-Если вы хотите отключить обрезку строк и преобразование пустых строк для подмножества запросов к вашему приложению, вы можете использовать метод `skipWhen`, предлагаемый обоими middleware. Этот метод принимает замыкание, которое должно возвращать `true` или `false`, чтобы указать, следует ли пропустить нормализацию ввода. Обычно метод `skipWhen` следует вызывать в методе `boot` в `AppServiceProvider` вашего приложения.
+    use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+    use Illuminate\Foundation\Http\Middleware\TrimStrings;
 
-```php
-use App\Http\Middleware\TrimStrings;
-use Illuminate\Http\Request;
-use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->remove([
+            ConvertEmptyStringsToNull::class,
+            TrimStrings::class,
+        ]);
+    })
 
-/**
- * Bootstrap any application services.
- */
-public function boot(): void
-{
-    TrimStrings::skipWhen(function (Request $request) {
-        return $request->is('admin/*');
-    });
+Если вы хотите отключить обрезку строк и преобразование пустых строк для подмножества запросов к вашему приложению, вы можете использовать методы посредника `trimStrings` и `convertEmptyStringsToNull` в файле `bootstrap/app.php` вашего приложения. Оба метода принимают массив замыканий, который должен возвращать `true` или `false`, чтобы указать, следует ли пропустить нормализацию ввода:
 
-    ConvertEmptyStringsToNull::skipWhen(function (Request $request) {
-        // ...
-    });
-}
-```
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->convertEmptyStringsToNull(except: [
+            fn (Request $request) => $request->is('admin/*'),
+        ]);
+
+        $middleware->trimStrings(except: [
+            fn (Request $request) => $request->is('admin/*'),
+        ]);
+    })
 
 <a name="files"></a>
 ## Файлы
@@ -582,70 +582,59 @@ public function boot(): void
 
 При запуске ваших приложений, использующих балансировщик нагрузки, завершающий сертификаты TLS / SSL, вы можете заметить, что ваше приложение иногда не генерирует ссылки протокола HTTPS при использовании глобального помощника `url`. Обычно это связано с тем, что ваше приложение перенаправляет трафик от вашего балансировщика нагрузки на порт 80 и не знает, что оно должно генерировать безопасные ссылки.
 
-Чтобы решить эту проблему, вы можете использовать посредника `App\Http\Middleware\TrustProxies`, содержащийся в вашем приложении Laravel, что позволяет вам быстро настраивать балансировщики нагрузки или прокси, которым ваше приложение должно доверять. Ваши доверенные прокси должны быть указаны в виде массива в свойстве `$proxies` этого посредника. В дополнение к настройке доверенных прокси вы можете настроить `$headers` прокси, которым следует доверять:
+Чтобы решить эту проблему, вы можете использовать посредника `Illuminate\Http\Middleware\TrustProxies`, содержащийся в вашем приложении Laravel, что позволяет вам быстро настраивать балансировщики нагрузки или прокси, которым ваше приложение должно доверять. Доверенные прокси-серверы должны быть указаны с помощью метода посредника `trustProxies` в файле `bootstrap/app.php` вашего приложения:
 
-    <?php
-
-    namespace App\Http\Middleware;
-
-    use Illuminate\Http\Middleware\TrustProxies as Middleware;
-    use Illuminate\Http\Request;
-
-    class TrustProxies extends Middleware
-    {
-        /**
-         * Доверенные прокси этого приложения.
-         *
-         * @var string|array
-         */
-        protected $proxies = [
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: [
             '192.168.1.1',
-            '192.168.1.2',
-        ];
+            '10.0.0.0/8',
+        ]);
+    })
 
-        /**
-         * Заголовки, используемые для обнаружения прокси.
-         *
-         * @var int
-         */
-        protected $headers = Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO;
-    }
+Помимо настройки доверенных прокси-серверов, вы также можете настроить заголовки прокси-серверов, которым следует доверять:
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(headers: Request::HEADER_X_FORWARDED_FOR |
+            Request::HEADER_X_FORWARDED_HOST |
+            Request::HEADER_X_FORWARDED_PORT |
+            Request::HEADER_X_FORWARDED_PROTO |
+            Request::HEADER_X_FORWARDED_AWS_ELB
+        );
+    })
 
 > [!NOTE]  
-> Если вы используете AWS Elastic Load Balancing, значение `$headers` должно быть `Request::HEADER_X_FORWARDED_AWS_ELB`. Для получения дополнительной информации о константах, которые могут использоваться в свойстве `$headers`, ознакомьтесь с документацией Symfony о [доверенных прокси-серверах](https://symfony.com/doc/current/deployment/proxies.html).
+> Если вы используете AWS Elastic Load Balancing, значение `headers` должно быть `Request::HEADER_X_FORWARDED_AWS_ELB`. Если ваш балансировщик нагрузки использует стандартный заголовок `Forwarded` из [RFC 7239] (https://www.rfc-editor.org/rfc/rfc7239#section-4), значение `headers` должно быть `Request::HEADER_FORWARDED`. Для получения дополнительной информации о константах, которые можно использовать в значении `headers`, ознакомьтесь с документацией Symfony о [доверенных прокси-серверах] (https://symfony.com/doc/7.0/deployment/proxies.html).
 
 <a name="trusting-all-proxies"></a>
 #### Доверие ко всем прокси
 
 Если вы используете Amazon AWS или другой поставщик «облачных» балансировщиков нагрузки, то вы можете не знать IP-адреса своих фактических балансировщиков. В этом случае вы можете использовать `*`, чтобы доверять всем прокси:
 
-    /**
-     * Доверенные прокси этого приложения.
-     *
-     * @var string|array
-     */
-    protected $proxies = '*';
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies(at: '*');
+    })
 
 <a name="configuring-trusted-hosts"></a>
 ## Конфигурирование доверенных хостов
 
 По умолчанию Laravel будет отвечать на все запросы, которые он получает, независимо от содержимого заголовка `Host` HTTP-запроса. Кроме того, значение заголовка `Host` будет использоваться при генерации абсолютных URL-адресов вашего приложения во время веб-запроса.
 
-Как правило, вам следует настроить свой веб-сервер (Nginx или Apache), так, чтобы он обслуживал запросы, соответствующие только указанному имени хоста. Однако, если у вас нет возможности напрямую настроить свой веб-сервер и вам нужно указать Laravel, чтобы он отвечал только на определенные имена хостов, вы можете сделать это, задействовав посредник `App\Http\Middleware\TrustHosts` для вашего приложения.
+Как правило, вам следует настроить свой веб-сервер (Nginx или Apache), так, чтобы он обслуживал запросы, соответствующие только указанному имени хоста. Однако, если у вас нет возможности напрямую настроить свой веб-сервер и вам нужно указать Laravel, чтобы он отвечал только на определенные имена хостов, вы можете сделать это, задействовав посредник `Illuminate\Http\Middleware\TrustHosts` для вашего приложения.
 
-Посредник `TrustHosts` уже содержится в стеке `$middleware` вашего приложения; однако вы должны раскомментировать его, чтобы он стал активным. В методе  `hosts` этого посредника вы можете указать имена хостов, на которые ваше приложение должно отвечать. Входящие запросы с другими значениями заголовка `Host` будут отклонены:
+Чтобы включить посредника `TrustHosts`, вам следует вызвать метод посредника `trustHosts` в файле `bootstrap/app.php` вашего приложения. Используя аргумент `at` этого метода, вы можете указать имена хостов, на которые ваше приложение должно реагировать. Входящие запросы с другими заголовками `Host` будут отклонены:
 
-    /**
-     * Получить шаблоны доверенных хостов.
-     *
-     * @return array<int, string>
-     */
-    public function hosts(): array
-    {
-        return [
-            'laravel.test',
-            $this->allSubdomainsOfApplicationUrl(),
-        ];
-    }
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustHosts(at: ['laravel.test']);
+    })
 
-Метод `allSubdomainsOfApplicationUrl` вернет регулярное выражение, соответствующее всем поддоменам значения `app.url` конфигурации вашего приложения. Этот метод обеспечивает удобный способ разрешить все поддомены вашего приложения при создании приложения, с использованием поддоменов, определяемых метасимволами подстановки.
+По умолчанию запросы, поступающие из поддоменов URL-адреса приложения, также автоматически считаются доверенными. Если вы хотите отключить это поведение, вы можете использовать аргумент `subdomains`:
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustHosts(at: ['laravel.test'], subdomains: false);
+    })
+
+Если вам нужен доступ к файлам конфигурации или базе данных вашего приложения, чтобы определить доверенные хосты, вы можете предоставить замыкание аргументу `at`:
+
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustHosts(at: fn () => config('app.trusted_hosts'));
+    })
