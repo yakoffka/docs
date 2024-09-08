@@ -1,5 +1,5 @@
 ---
-git: 656ba39a0393052cf70cefb8412c2063fc99852f
+git: b63370cb54fd7158d004dfae2b647de937c80355
 ---
 
 # Laravel Dusk
@@ -108,19 +108,33 @@ php artisan dusk:make LoginTest
 
 Трейт `DatabaseMigrations` будет запускать миграции базы данных перед каждым тестом. Однако удаление и воссоздание таблиц базы данных для каждого теста обычно происходит медленнее, чем очистка таблиц:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Browser;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
 
-    use App\Models\User;
-    use Illuminate\Foundation\Testing\DatabaseMigrations;
-    use Laravel\Dusk\Chrome;
-    use Tests\DuskTestCase;
+uses(DatabaseMigrations::class);
 
-    class ExampleTest extends DuskTestCase
-    {
-        use DatabaseMigrations;
-    }
+//
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Browser;
+
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
+use Tests\DuskTestCase;
+
+class ExampleTest extends DuskTestCase
+{
+    use DatabaseMigrations;
+
+    //
+}
+```
 
 > [!WARNING]
 > Базы данных SQLite, хранимые в памяти, нельзя использовать при выполнении тестов Dusk. Поскольку браузер выполняет свой собственный процесс, он не сможет получить доступ к базам данных, хранимых в памяти, других процессов.
@@ -128,29 +142,41 @@ php artisan dusk:make LoginTest
 <a name="reset-truncation"></a>
 #### Использование Truncation
 
-Перед использованием трейта `DatabaseTruncation` вы должны установить пакет `doctrine/dbal` с помощью менеджера пакетов Composer:
-
-```shell
-composer require --dev doctrine/dbal
-```
-
 Трейт `DatabaseTruncation` проведет миграцию вашей базы данных перед первым тестом, чтобы убедиться, что таблицы базы данных были правильно созданы. Однако в последующих тестах таблицы базы данных будут просто очищены, что обеспечивает ускорение по сравнению с повторным выполнением всех миграций базы данных:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Browser;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Laravel\Dusk\Browser;
 
-    use App\Models\User;
-    use Illuminate\Foundation\Testing\DatabaseTruncation;
-    use Laravel\Dusk\Chrome;
-    use Tests\DuskTestCase;
+uses(DatabaseTruncation::class);
 
-    class ExampleTest extends DuskTestCase
-    {
-        use DatabaseTruncation;
-    }
+//
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Browser;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Laravel\Dusk\Browser;
+use Tests\DuskTestCase;
+
+class ExampleTest extends DuskTestCase
+{
+    use DatabaseTruncation;
+
+    //
+}
+```
 
 По умолчанию этот трейт очищает все таблицы, кроме таблицы `migrations`. Если вы хотите настроить таблицы, которые должны быть очищены, вы можете определить свойство `$tablesToTruncate` в вашем тестовом классе:
+
+> [!NOTE]  
+> Если вы используете Pest, вам следует определить свойства или методы базового класса `DuskTestCase` или любого класса, расширяемого вашим тестовым файлом.
 
     /**
      * Указывает, какие таблицы должны быть очищены.
@@ -210,7 +236,7 @@ php artisan dusk
 php artisan dusk:fails
 ```
 
-Команда `dusk` принимает любой аргумент, который обычно принимается тестером PHPUnit, например, позволяет вам запускать тесты только для указанной [группы](https://docs.phpunit.de/en/10.5/annotations.html#group):
+Команда `dusk` принимает любой аргумент, который обычно принимается тестером Pest / PHPUnit, например, позволяет вам запускать тесты только для указанной [группы](https://docs.phpunit.de/en/10.5/annotations.html#group):
 
 ```shell
 php artisan dusk --group=foo
@@ -263,38 +289,63 @@ php artisan dusk --group=foo
 
 Для начала давайте напишем тест, который проверяет, можем ли мы войти в наше приложение. После создания теста мы можем изменить его, чтобы перейти на страницу входа, ввести некоторые учетные данные и нажать кнопку «Войти». Чтобы создать экземпляр браузера, вы можете вызвать метод `browse` из своего теста Dusk:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Browser;
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
 
-    use App\Models\User;
-    use Illuminate\Foundation\Testing\DatabaseMigrations;
-    use Laravel\Dusk\Browser;
-    use Laravel\Dusk\Chrome;
-    use Tests\DuskTestCase;
+uses(DatabaseMigrations::class);
 
-    class ExampleTest extends DuskTestCase
+test('basic example', function () {
+    $user = User::factory()->create([
+        'email' => 'taylor@laravel.com',
+    ]);
+
+    $this->browse(function (Browser $browser) use ($user) {
+        $browser->visit('/login')
+                ->type('email', $user->email)
+                ->type('password', 'password')
+                ->press('Login')
+                ->assertPathIs('/home');
+    });
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Browser;
+
+use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
+use Tests\DuskTestCase;
+
+class ExampleTest extends DuskTestCase
+{
+    use DatabaseMigrations;
+
+    /**
+     * A basic browser test example.
+     */
+    public function test_basic_example(): void
     {
-        use DatabaseMigrations;
+        $user = User::factory()->create([
+            'email' => 'taylor@laravel.com',
+        ]);
 
-        /**
-         * Отвлеченный пример браузерного теста.
-         */
-        public function test_basic_example(): void
-        {
-            $user = User::factory()->create([
-                'email' => 'taylor@laravel.com',
-            ]);
-
-            $this->browse(function (Browser $browser) use ($user) {
-                $browser->visit('/login')
-                        ->type('email', $user->email)
-                        ->type('password', 'password')
-                        ->press('Login')
-                        ->assertPathIs('/home');
-            });
-        }
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->visit('/login')
+                    ->type('email', $user->email)
+                    ->type('password', 'password')
+                    ->press('Login')
+                    ->assertPathIs('/home');
+        });
     }
+}
+```
 
 Как видно в приведенном выше примере, метод `browse` принимает замыкание. Dusk автоматически передаст экземпляр браузера в это замыкание. Экземпляр браузера является основным объектом, используемым для взаимодействия с вашим приложением и создания утверждений.
 
@@ -327,7 +378,7 @@ php artisan dusk --group=foo
 
 Вы можете использовать метод `visitRoute` для перехода к [именованному маршруту](/docs/{{version}}/routing#named-routes):
 
-    $browser->visitRoute('login');
+    $browser->visitRoute($routeName, $parameters);
 
 Вы можете перемещаться «назад» и «вперед», используя методы `back` и `forward`:
 
@@ -456,6 +507,9 @@ php artisan dusk --group=foo
 
     $browser->responsiveScreenshots('filename');
 
+Метод `screenshotElement` можно использовать для создания снимка экрана определенного элемента на странице:
+
+    $browser->screenshotElement('#selector', 'filename');
 
 <a name="storing-console-output-to-disk"></a>
 ### Сохранение вывода консоли на диск
@@ -815,9 +869,9 @@ Dusk содержит различные методы для взаимодей�
 
     $browser->withinFrame('#credit-card-details', function ($browser) {
         $browser->type('input[name="cardnumber"]', '4242424242424242')
-            ->type('input[name="exp-date"]', '12/24')
-            ->type('input[name="cvc"]', '123');
-        })->press('Pay');
+            ->type('input[name="exp-date"]', '1224')
+            ->type('input[name="cvc"]', '123')
+            ->press('Pay');
     });
 
 <a name="scoping-selectors"></a>
@@ -1074,6 +1128,8 @@ Dusk содержит множество утверждений, которые 
 - [assertPortIs](#assert-port-is)
 - [assertPortIsNot](#assert-port-is-not)
 - [assertPathBeginsWith](#assert-path-begins-with)
+- [assertPathEndsWith](#assert-path-ends-with)
+- [assertPathContains](#assert-path-contains)
 - [assertPathIs](#assert-path-is)
 - [assertPathIsNot](#assert-path-is-not)
 - [assertRouteIs](#assert-route-is)
@@ -1211,6 +1267,20 @@ Dusk содержит множество утверждений, которые 
 Утверждает, что путь текущего URL начинается с указанного пути:
 
     $browser->assertPathBeginsWith('/home');
+
+<a name="assert-path-ends-with"></a>
+#### assertPathEndsWith
+
+Утверждает, что текущий путь URL-адреса заканчивается заданным путем:
+
+    $browser->assertPathEndsWith('/home');
+
+<a name="assert-path-contains"></a>
+#### assertPathContains
+
+Утверждает, что текущий путь URL-адреса содержит заданный путь:
+
+    $browser->assertPathContains('/home');
 
 <a name="assert-path-is"></a>
 #### assertPathIs
@@ -1677,16 +1747,27 @@ Dusk даже позволяет вам делать утверждения о �
 
 Вы можете утверждать о состоянии компонента Vue следующим образом:
 
-    /**
-     * Отвлеченный пример теста компонента Vue.
-     */
-    public function test_vue(): void
-    {
-        $this->browse(function (Browser $browser) {
-            $browser->visit('/')
-                    ->assertVue('user.name', 'Taylor', '@profile-component');
-        });
-    }
+```php tab=Pest
+test('vue', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->visit('/')
+                ->assertVue('user.name', 'Taylor', '@profile-component');
+    });
+});
+```
+
+```php tab=PHPUnit
+/**
+ * A basic Vue test example.
+ */
+public function test_vue(): void
+{
+    $this->browse(function (Browser $browser) {
+        $browser->visit('/')
+                ->assertVue('user.name', 'Taylor', '@profile-component');
+    });
+}
+```
 
 <a name="assert-vue-is-not"></a>
 #### assertVueIsNot
@@ -1818,6 +1899,7 @@ Dusk даже позволяет вам делать утверждения о �
     namespace Tests\Browser\Pages;
 
     use Laravel\Dusk\Browser;
+    use Laravel\Dusk\Page;
 
     class Dashboard extends Page
     {
@@ -1923,31 +2005,53 @@ Dusk даже позволяет вам делать утверждения о �
 
 Как только компонент определен, мы можем легко выбрать дату с помощью элемента выбора даты из любого теста. И, если логика, необходимая для выбора даты, изменится, нам нужно будет только обновить компонент:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Browser;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
+use Tests\Browser\Components\DatePicker;
 
-    use Illuminate\Foundation\Testing\DatabaseMigrations;
-    use Laravel\Dusk\Browser;
-    use Tests\Browser\Components\DatePicker;
-    use Tests\DuskTestCase;
+uses(DatabaseMigrations::class);
 
-    class ExampleTest extends DuskTestCase
+test('basic example', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->visit('/')
+                ->within(new DatePicker, function (Browser $browser) {
+                    $browser->selectDate(2019, 1, 30);
+                })
+                ->assertSee('January');
+    });
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Browser;
+
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Laravel\Dusk\Browser;
+use Tests\Browser\Components\DatePicker;
+use Tests\DuskTestCase;
+
+class ExampleTest extends DuskTestCase
+{
+    /**
+     * A basic component test example.
+     */
+    public function test_basic_example(): void
     {
-        /**
-         * Отвлеченный пример теста компонента.
-         */
-        public function test_basic_example(): void
-        {
-            $this->browse(function (Browser $browser) {
-                $browser->visit('/')
-                        ->within(new DatePicker, function (Browser $browser) {
-                            $browser->selectDate(2019, 1, 30);
-                        })
-                        ->assertSee('January');
-            });
-        }
+        $this->browse(function (Browser $browser) {
+            $browser->visit('/')
+                    ->within(new DatePicker, function (Browser $browser) {
+                        $browser->selectDate(2019, 1, 30);
+                    })
+                    ->assertSee('January');
+        });
     }
+}
+```
 
 <a name="continuous-integration"></a>
 ## Непрерывная интеграция
@@ -1965,11 +2069,11 @@ Dusk даже позволяет вам делать утверждения о �
         "test": {
           "buildpacks": [
             { "url": "heroku/php" },
-            { "url": "https://github.com/heroku/heroku-buildpack-google-chrome" }
+            { "url": "https://github.com/heroku/heroku-buildpack-chrome-for-testing" }
           ],
           "scripts": {
             "test-setup": "cp .env.testing .env",
-            "test": "nohup bash -c './vendor/laravel/dusk/bin/chromedriver-linux > /dev/null 2>&1 &' && nohup bash -c 'php artisan serve --no-reload > /dev/null 2>&1 &' && php artisan dusk"
+            "test": "nohup bash -c './vendor/laravel/dusk/bin/chromedriver-linux --port=9515 > /dev/null 2>&1 &' && nohup bash -c 'php artisan serve --no-reload > /dev/null 2>&1 &' && php artisan dusk"
           }
         }
       }
@@ -1984,7 +2088,7 @@ Dusk даже позволяет вам делать утверждения о �
 language: php
 
 php:
-  - 7.3
+  - 8.2
 
 addons:
   chrome: stable
@@ -2035,20 +2139,20 @@ jobs:
       - name: Upgrade Chrome Driver
         run: php artisan dusk:chrome-driver --detect
       - name: Start Chrome Driver
-        run: ./vendor/laravel/dusk/bin/chromedriver-linux &
+        run: ./vendor/laravel/dusk/bin/chromedriver-linux --port=9515 &
       - name: Run Laravel Server
         run: php artisan serve --no-reload &
       - name: Run Dusk Tests
         run: php artisan dusk
       - name: Upload Screenshots
         if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: screenshots
           path: tests/Browser/screenshots
       - name: Upload Console Logs
         if: failure()
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: console
           path: tests/Browser/console
@@ -2081,7 +2185,7 @@ pipeline:
       cp -v .env.example .env
       composer install --no-interaction --prefer-dist --optimize-autoloader
       php artisan key:generate
-      
+
       # Создаем файл окружения dusk, убедившись, что APP_URL использует BUILD_HOST
       cp -v .env .env.dusk.ci
       sed -i "s@APP_URL=.*@APP_URL=http://$BUILD_HOST:8000@g" .env.dusk.ci
