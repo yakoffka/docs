@@ -1,5 +1,5 @@
 ---
-git: 8f995824d69bfeded20ea9c50288935f9eee8b0b
+git: 1b69438a67473dc3a9c7f351b3fa742460d11054
 ---
 
 # Валидация
@@ -223,7 +223,7 @@ Laravel также содержит глобального помощника `o
 <a name="a-note-on-optional-fields"></a>
 ### Примечание о необязательных полях
 
-По умолчанию Laravel содержит посредников `App\Http\Middleware\TrimStrings` и `App\Http\Middleware\ConvertEmptyStringsToNull` в глобальном стеке посредников вашего приложения. Эти посредники перечислены в классе `App\Http\Kernel`. Первый из упомянутых посредников будет автоматически обрезать все входящие строковые поля запроса, а второй – конвертировать любые пустые строковые поля в `null`. Из-за этого вам часто нужно будет помечать ваши «необязательные» поля запроса как `nullable`, если вы не хотите, чтобы валидатор не считал такие поля недействительными. Например:
+По умолчанию Laravel содержит посредников `App\Http\Middleware\TrimStrings` и `App\Http\Middleware\ConvertEmptyStringsToNull` в глобальном стеке посредников вашего приложения. Первый из упомянутых посредников будет автоматически обрезать все входящие строковые поля запроса, а второй – конвертировать любые пустые строковые поля в `null`. Из-за этого вам часто нужно будет помечать ваши «необязательные» поля запроса как `nullable`, если вы не хотите, чтобы валидатор не считал такие поля недействительными. Например:
 
     $request->validate([
         'title' => 'required|unique:posts|max:255',
@@ -281,7 +281,7 @@ php artisan make:request StorePostRequest
     /**
      * Получить массив правил валидации, которые будут применены к запросу.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -530,7 +530,7 @@ public function after(): array
             ]);
 
             if ($validator->fails()) {
-                return redirect('post/create')
+                return redirect('/post/create')
                             ->withErrors($validator)
                             ->withInput();
             }
@@ -582,7 +582,7 @@ public function after(): array
 
 Если у вас есть несколько форм на одной странице, то вы можете задать имя экземпляру `MessageBag`, содержащий ошибки валидации, что позволит вам получать сообщения об ошибках для конкретной формы. Чтобы добиться этого, передайте имя в качестве второго аргумента в метод `withErrors`:
 
-    return redirect('register')->withErrors($validator, 'login');
+    return redirect('/register')->withErrors($validator, 'login');
 
 Затем, вы можете получить доступ к именованному экземпляру `MessageBag` из переменной `$errors`:
 
@@ -839,6 +839,7 @@ The credit card number field is required when payment type is credit card.
 - [Between](#rule-between)
 - [Boolean](#rule-boolean)
 - [Confirmed](#rule-confirmed)
+- [Contains](#rule-contains)
 - [Current Password](#rule-current-password)
 - [Date](#rule-date)
 - [Date Equals](#rule-date-equals)
@@ -876,6 +877,7 @@ The credit card number field is required when payment type is credit card.
 - [JSON](#rule-json)
 - [Less Than](#rule-lt)
 - [Less Than Or Equal](#rule-lte)
+- [List](#rule-list)
 - [Lowercase](#rule-lowercase)
 - [MAC Address](#rule-mac)
 - [Max](#rule-max)
@@ -901,6 +903,7 @@ The credit card number field is required when payment type is credit card.
 - [Prohibited](#rule-prohibited)
 - [Prohibited If](#rule-prohibited-if)
 - [Required If Accepted](#rule-required-if-accepted)
+- [Required If Declined](#rule-required-if-declined)
 - [Prohibited Unless](#rule-prohibited-unless)
 - [Prohibits](#rule-prohibits)
 - [Regex (regular expression)](#rule-regex)
@@ -1055,6 +1058,11 @@ The credit card number field is required when payment type is credit card.
 #### confirmed
 
 Проверяемое поле должно иметь совпадающее поле `{field}_confirmation`. Например, если проверяемое поле – `password`, то поле `password_confirmation` также должно присутствовать во входящих данных.
+
+<a name="rule-contains"></a>
+#### contains:_foo_,_bar_,...
+
+Проверяемое поле должно представлять собой массив, содержащий все заданные значения параметров.
 
 <a name="rule-current-password"></a>
 #### current_password
@@ -1433,6 +1441,12 @@ Rule::enum(ServerStatus::class)
 
 Поле, подлежащее валидации, должно быть в нижнем регистре.
 
+<a name="rule-list"></a>
+#### list
+
+The field under validation must be an array that is a list. An array is considered a list if its keys consist of consecutive numbers from 0 to `count($array) - 1`.
+Проверяемое поле должно быть массивом, представляющим собой список. Массив считается списком, если его ключи состоят из последовательных чисел от 0 до `count($array) - 1`.
+
 <a name="rule-mac"></a>
 #### mac_address
 
@@ -1512,7 +1526,6 @@ Rule::enum(ServerStatus::class)
 #### missing_with_all:_foo_,_bar_,...
 
 Поле, подлежащее валидации, не должно присутствовать _только если_ присутствуют все указанные поля.
-
 
 <a name="rule-not-in"></a>
 #### not_in:_foo_,_bar_,...
@@ -1690,6 +1703,11 @@ Rule::enum(ServerStatus::class)
 #### required_if_accepted:_anotherfield_,...
 
 Проверяемое поле должно присутствовать и не быть пустым, если поле _anotherfield_ равно `"yes"`, `"on"`, `1`, `"1"`, `true` или `"true"`.
+
+<a name="rule-required-if-declined"></a>
+#### required_if_declined:_anotherfield_,...
+
+Проверяемое поле должно присутствовать и не быть пустым, если поле _anotherfield_ равно `"no"`, `"off"`, `0`, `"0"`, `false` или `"false"`.
 
 <a name="rule-required-unless"></a>
 #### required_unless:_anotherfield_,_value_,...
@@ -1881,7 +1899,7 @@ Rule::enum(ServerStatus::class)
 
 По желанию можно выполнить валидацию поля, **только** если это поле присутствует в проверяемых данных. Чтобы этого добиться, добавьте правило `sometimes` в свой список правил:
 
-    $v = Validator::make($data, [
+    $validator = Validator::make($data, [
         'email' => 'sometimes|required|email',
     ]);
 
