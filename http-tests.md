@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: b874bc07a34f0a9c960f3e1b7ced2370724abcf9
 ---
 
 # Тестирование · Тесты HTTP
@@ -10,7 +10,17 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 Laravel предлагает гибкий API в составе вашего приложения для выполнения HTTP-запросов и получения информации об ответах. Например, взгляните на следующий функциональный тест:
 
-```php
+```php tab=Pest
+<?php
+
+test('the application returns a successful response', function () {
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+});
+```
+
+```php tab=PHPUnit
 <?php
 
 namespace Tests\Feature;
@@ -40,24 +50,36 @@ class ExampleTest extends TestCase
 
 Вместо того чтобы возвращать экземпляр `Illuminate\Http\Response`, методы тестового запроса возвращают экземпляр `Illuminate\Testing\TestResponse`, который содержит [множество полезных утверждений](#available-assertions), позволяющие вам инспектировать ответы вашего приложения:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('basic request', function () {
+    $response = $this->get('/');
 
-    use Tests\TestCase;
+    $response->assertStatus(200);
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_a_basic_request(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_a_basic_request(): void
-        {
-            $response = $this->get('/');
+        $response = $this->get('/');
 
-            $response->assertStatus(200);
-        }
+        $response->assertStatus(200);
     }
+}
+```
 
 Как правило, каждый из ваших тестов должен выполнять только один запрос к вашему приложению. Неожиданное поведение может возникнуть, если в рамках одного метода теста выполняется несколько запросов.
 
@@ -69,90 +91,157 @@ class ExampleTest extends TestCase
 
 Вы можете использовать метод `withHeaders` для настройки заголовков запроса перед его отправкой в приложение. Этот метод позволяет вам добавлять в запрос любые пользовательские заголовки:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('interacting with headers', function () {
+    $response = $this->withHeaders([
+        'X-Header' => 'Value',
+    ])->post('/user', ['name' => 'Sally']);
 
-    use Tests\TestCase;
+    $response->assertStatus(201);
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic functional test example.
+     */
+    public function test_interacting_with_headers(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_interacting_with_headers(): void
-        {
-            $response = $this->withHeaders([
-                'X-Header' => 'Value',
-            ])->post('/user', ['name' => 'Sally']);
+        $response = $this->withHeaders([
+            'X-Header' => 'Value',
+        ])->post('/user', ['name' => 'Sally']);
 
-            $response->assertStatus(201);
-        }
+        $response->assertStatus(201);
     }
+}
+```
 
 <a name="cookies"></a>
 ### Cookies
 
 Вы можете использовать методы `withCookie` или `withCookies` для установки значений файлов Cookies перед отправкой запроса. Метод `withCookie` принимает имя и значение Cookie в качестве двух аргументов, а метод `withCookies` принимает массив пар имя / значение:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('interacting with cookies', function () {
+    $response = $this->withCookie('color', 'blue')->get('/');
 
-    use Tests\TestCase;
+    $response = $this->withCookies([
+        'color' => 'blue',
+        'name' => 'Taylor',
+    ])->get('/');
 
-    class ExampleTest extends TestCase
+    //
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_interacting_with_cookies(): void
     {
-        public function test_interacting_with_cookies(): void
-        {
-            $response = $this->withCookie('color', 'blue')->get('/');
+        $response = $this->withCookie('color', 'blue')->get('/');
 
-            $response = $this->withCookies([
-                'color' => 'blue',
-                'name' => 'Taylor',
-            ])->get('/');
-        }
+        $response = $this->withCookies([
+            'color' => 'blue',
+            'name' => 'Taylor',
+        ])->get('/');
+
+        //
     }
+}
+```
 
 <a name="session-and-authentication"></a>
 ### Сессия / Аутентификация
 
 Laravel предлагает несколько методов-хелперов для взаимодействия с сессией во время HTTP-тестирования. Во-первых, вы можете установить данные сессии, передав массив, используя метод `withSession`. Это полезно для загрузки сессии данными перед отправкой запроса вашему приложению:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('interacting with the session', function () {
+    $response = $this->withSession(['banned' => false])->get('/');
 
-    use Tests\TestCase;
+    //
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_interacting_with_the_session(): void
     {
-        public function test_interacting_with_the_session(): void
-        {
-            $response = $this->withSession(['banned' => false])->get('/');
-        }
+        $response = $this->withSession(['banned' => false])->get('/');
+
+        //
     }
+}
+```
 
 Сессия Laravel обычно используется для сохранения состояния текущего аутентифицированного пользователя. Вспомогательный метод `actingAs` – это простой способ аутентифицировать конкретного пользователя как текущего. Например, мы можем использовать [фабрику модели](/docs/{{version}}/eloquent-factories) для генерации и аутентификации пользователя:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+use App\Models\User;
 
-    use App\Models\User;
-    use Tests\TestCase;
+test('an action that requires authentication', function () {
+    $user = User::factory()->create();
 
-    class ExampleTest extends TestCase
+    $response = $this->actingAs($user)
+                     ->withSession(['banned' => false])
+                     ->get('/');
+
+    //
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\User;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_an_action_that_requires_authentication(): void
     {
-        public function test_an_action_that_requires_authentication(): void
-        {
-            $user = User::factory()->create();
+        $user = User::factory()->create();
 
-            $response = $this->actingAs($user)
-                             ->withSession(['banned' => false])
-                             ->get('/');
-        }
+        $response = $this->actingAs($user)
+                         ->withSession(['banned' => false])
+                         ->get('/');
+
+        //
     }
+}
+```
 
 Вы также можете указать, какой гейт должен использоваться для аутентификации конкретного пользователя, передав имя гейта в качестве второго аргумента методу `actingAs`.  Гейт, предоставленный методу actingAs, также станет гейтом по умолчанию на протяжении всего теста::
 
@@ -163,58 +252,152 @@ Laravel предлагает несколько методов-хелперов 
 
 После выполнения тестового запроса к вашему приложению методы `dump`, `dumpHeaders`, и `dumpSession` могут быть использованы для проверки и отладки содержимого ответа:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('basic test', function () {
+    $response = $this->get('/');
 
-    use Tests\TestCase;
+    $response->dumpHeaders();
 
-    class ExampleTest extends TestCase
+    $response->dumpSession();
+
+    $response->dump();
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_basic_test(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_basic_test(): void
-        {
-            $response = $this->get('/');
+        $response = $this->get('/');
 
-            $response->dumpHeaders();
+        $response->dumpHeaders();
 
-            $response->dumpSession();
+        $response->dumpSession();
 
-            $response->dump();
-        }
+        $response->dump();
     }
+}
+```
 
 В качестве альтернативы вы можете использовать методы `dd`, `ddHeaders` и `ddSession`, чтобы выгрузить информацию об ответе и затем остановить выполнение:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('basic test', function () {
+    $response = $this->get('/');
 
-    use Tests\TestCase;
+    $response->ddHeaders();
 
-    class ExampleTest extends TestCase
+    $response->ddSession();
+
+    $response->dd();
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_basic_test(): void
     {
-        /**
-         * Пример базового теста.
-         */
-        public function test_basic_test(): void
-        {
-            $response = $this->get('/');
+        $response = $this->get('/');
 
-            $response->ddHeaders();
+        $response->ddHeaders();
 
-            $response->ddSession();
+        $response->ddSession();
 
-            $response->dd();
-        }
+        $response->dd();
     }
+}
+```
 
 <a name="exception-handling"></a>
 ### Обработка исключений
 
-Иногда вам может понадобиться проверить, выдает ли ваше приложение конкретное исключение. Чтобы исключение не было перехвачено обработчиком исключений Laravel и не возвращено в виде ответа HTTP, вы можете вызвать метод `withoutExceptionHandling` перед тем, как сделать свой запрос:
+Иногда вам может понадобиться проверить, выдает ли ваше приложение определенное исключение. Для этого вы можете «подделать» обработчик исключений через фасад `Exceptions`. После того как обработчик исключений был подделан, вы можете использовать методы `assertReported` и `assertNotReported` для создания утверждений против исключений, которые были созданы во время запроса:
+
+```php tab=Pest
+<?php
+
+use App\Exceptions\InvalidOrderException;
+use Illuminate\Support\Facades\Exceptions;
+
+test('exception is thrown', function () {
+    Exceptions::fake();
+
+    $response = $this->get('/order/1');
+
+    // Assert an exception was thrown...
+    Exceptions::assertReported(InvalidOrderException::class);
+
+    // Assert against the exception...
+    Exceptions::assertReported(function (InvalidOrderException $e) {
+        return $e->getMessage() === 'The order was invalid.';
+    });
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use App\Exceptions\InvalidOrderException;
+use Illuminate\Support\Facades\Exceptions;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic test example.
+     */
+    public function test_exception_is_thrown(): void
+    {
+        Exceptions::fake();
+
+        $response = $this->get('/');
+
+        // Assert an exception was thrown...
+        Exceptions::assertReported(InvalidOrderException::class);
+
+        // Assert against the exception...
+        Exceptions::assertReported(function (InvalidOrderException $e) {
+            return $e->getMessage() === 'The order was invalid.';
+        });
+    }
+}
+```
+
+Методы `assertNotReported` и `assertNothingReported` могут использоваться для подтверждения того, что данное исключение не было создано во время запроса или что никаких исключений не было создано:
+
+```php
+Exceptions::assertNotReported(InvalidOrderException::class);
+
+Exceptions::assertNothingReported();
+```
+
+Вы можете полностью отключить обработку исключений для данного запроса, вызвав метод `withoutExceptionHandling` перед отправкой запроса:
 
     $response = $this->withoutExceptionHandling()->get('/');
 
@@ -232,94 +415,156 @@ $this->assertThrows(
 );
 ```
 
+Если вы хотите проверить и сделать утверждения против выброшенного исключения, вы можете предоставить замыкание в качестве второго аргумента метода `assertThrows`:
+
+```php
+$this->assertThrows(
+    fn () => (new ProcessOrder)->execute(),
+    fn (OrderInvalid $e) => $e->orderId() === 123;
+);
+```
+
 <a name="testing-json-apis"></a>
 ## Тестирование JSON API
 
 Laravel также содержит несколько хелперов для тестирования API-интерфейсов JSON и их ответов. Например, методы `json`, `getJson`, `postJson`, `putJson`, `patchJson`, `deleteJson`, и `optionsJson` могут использоваться для отправки запросов JSON с различными HTTP-командами. Вы также можете передавать данные и заголовки этим методам. Для начала давайте напишем тест, чтобы сделать запрос `POST` к `/api/user` и убедиться, что в JSON были возвращены ожидаемые данные:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('making an api request', function () {
+    $response = $this->postJson('/api/user', ['name' => 'Sally']);
 
-    use Tests\TestCase;
+    $response
+        ->assertStatus(201)
+        ->assertJson([
+            'created' => true,
+         ]);
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic functional test example.
+     */
+    public function test_making_an_api_request(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_making_an_api_request(): void
-        {
-            $response = $this->postJson('/api/user', ['name' => 'Sally']);
+        $response = $this->postJson('/api/user', ['name' => 'Sally']);
 
-            $response
-                ->assertStatus(201)
-                ->assertJson([
-                    'created' => true,
-                ]);
-        }
+        $response
+            ->assertStatus(201)
+            ->assertJson([
+                'created' => true,
+            ]);
     }
+}
+```
 
 Кроме того, к данным ответа JSON можно получить доступ как к переменным массива в ответе, что позволяет удобно проверять отдельные значения, возвращаемые в JSON-ответе:
 
-    $this->assertTrue($response['created']);
+```php tab=Pest
+expect($response['created'])->toBeTrue();
+```
+
+```php tab=PHPUnit
+$this->assertTrue($response['created']);
+```
 
 > [!NOTE]
-> Метод `assertJson` преобразует ответ в массив и использует `PHPUnit::assertArraySubset` для проверки того, что переданный массив существует в ответе JSON, возвращаемом приложением. Итак, если в ответе JSON есть другие свойства, этот тест все равно будет проходить, пока присутствует переданный фрагмент.
+> Метод `assertJson` преобразует ответ в массив для проверки того, что переданный массив существует в ответе JSON, возвращаемом приложением. Итак, если в ответе JSON есть другие свойства, этот тест все равно будет проходить, пока присутствует переданный фрагмент.
 
 <a name="verifying-exact-match"></a>
 #### Утверждение точных совпадений JSON
 
 Как упоминалось ранее, метод `assertJson` используется для подтверждения наличия фрагмента JSON в ответе JSON. Если вы хотите убедиться, что данный массив **в точности соответствует** JSON, возвращаемому вашим приложением, вы должны использовать метод `assertExactJson`:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('asserting an exact json match', function () {
+    $response = $this->postJson('/user', ['name' => 'Sally']);
 
-    use Tests\TestCase;
+    $response
+        ->assertStatus(201)
+        ->assertExactJson([
+            'created' => true,
+        ]);
+});
 
-    class ExampleTest extends TestCase
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic functional test example.
+     */
+    public function test_asserting_an_exact_json_match(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_asserting_an_exact_json_match(): void
-        {
-            $response = $this->postJson('/user', ['name' => 'Sally']);
+        $response = $this->postJson('/user', ['name' => 'Sally']);
 
-            $response
-                ->assertStatus(201)
-                ->assertExactJson([
-                    'created' => true,
-                ]);
-        }
+        $response
+            ->assertStatus(201)
+            ->assertExactJson([
+                'created' => true,
+            ]);
     }
+}
+```
 
 <a name="verifying-json-paths"></a>
 #### Утверждения в JSON-путях
 
 Если вы хотите убедиться, что ответ JSON содержит данные по указанному пути, вам следует использовать метод `assertJsonPath`:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('asserting a json path value', function () {
+    $response = $this->postJson('/user', ['name' => 'Sally']);
 
-    use Tests\TestCase;
+    $response
+        ->assertStatus(201)
+        ->assertJsonPath('team.owner.name', 'Darian');
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    /**
+     * A basic functional test example.
+     */
+    public function test_asserting_a_json_paths_value(): void
     {
-        /**
-         * Отвлеченный пример функционального теста.
-         */
-        public function test_asserting_a_json_paths_value(): void
-        {
-            $response = $this->postJson('/user', ['name' => 'Sally']);
+        $response = $this->postJson('/user', ['name' => 'Sally']);
 
-            $response
-                ->assertStatus(201)
-                ->assertJsonPath('team.owner.name', 'Darian');
-        }
+        $response
+            ->assertStatus(201)
+            ->assertJsonPath('team.owner.name', 'Darian');
     }
+}
+```
 
 Метод `assertJsonPath` также принимает замыкание, которое может быть использовано для динамического определения, должно ли утверждение выполниться:
 
@@ -330,25 +575,45 @@ Laravel также содержит несколько хелперов для �
 
 Laravel предлагает способ последовательного тестирования ответов JSON вашего приложения. Для начала передайте замыкание методу `assertJson`. Это замыкание будет вызываться с экземпляром класса `Illuminate\Testing\Fluent\AssertableJson`, который можно использовать для создания утверждений в отношении JSON, возвращенного вашим приложением. Метод `where` может использоваться для утверждения определенного атрибута JSON, в то время как метод `missing` может использоваться для утверждения отсутствия конкретного атрибута в JSON:
 
-    use Illuminate\Testing\Fluent\AssertableJson;
+```php tab=Pest
+use Illuminate\Testing\Fluent\AssertableJson;
 
-    /**
-     * Отвлеченный пример функционального теста.
-     */
-    public function test_fluent_json(): void
-    {
-        $response = $this->getJson('/users/1');
+test('fluent json', function () {
+    $response = $this->getJson('/users/1');
 
-        $response
-            ->assertJson(fn (AssertableJson $json) =>
-                $json->where('id', 1)
-                     ->where('name', 'Victoria Faith')
-                     ->where('email', fn (string $email) => str($email)->is('victoria@gmail.com'))
-                     ->whereNot('status', 'pending')
-                     ->missing('password')
-                     ->etc()
-            );
-    }
+    $response
+        ->assertJson(fn (AssertableJson $json) =>
+            $json->where('id', 1)
+                 ->where('name', 'Victoria Faith')
+                 ->where('email', fn (string $email) => str($email)->is('victoria@gmail.com'))
+                 ->whereNot('status', 'pending')
+                 ->missing('password')
+                 ->etc()
+        );
+});
+```
+
+```php tab=PHPUnit
+use Illuminate\Testing\Fluent\AssertableJson;
+
+/**
+ * A basic functional test example.
+ */
+public function test_fluent_json(): void
+{
+    $response = $this->getJson('/users/1');
+
+    $response
+        ->assertJson(fn (AssertableJson $json) =>
+            $json->where('id', 1)
+                 ->where('name', 'Victoria Faith')
+                 ->where('email', fn (string $email) => str($email)->is('victoria@gmail.com'))
+                 ->whereNot('status', 'pending')
+                 ->missing('password')
+                 ->etc()
+        );
+}
+```
 
 #### Понимание метода `etc`
 
@@ -472,31 +737,50 @@ Laravel предлагает способ последовательного т�
 
 Класс `Illuminate\Http\UploadedFile` содержит метод `fake`, который можно использовать для создания фиктивных файлов или изображений для тестирования. Это, в сочетании с методом `fake` фасада `Storage`, значительно упрощает тестирование загрузки файлов. Например, вы можете объединить эти две функции, чтобы легко протестировать форму загрузки аватара:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
-    use Illuminate\Foundation\Testing\RefreshDatabase;
-    use Illuminate\Foundation\Testing\WithoutMiddleware;
-    use Illuminate\Http\UploadedFile;
-    use Illuminate\Support\Facades\Storage;
-    use Tests\TestCase;
+test('avatars can be uploaded', function () {
+    Storage::fake('avatars');
 
-    class ExampleTest extends TestCase
+    $file = UploadedFile::fake()->image('avatar.jpg');
+
+    $response = $this->post('/avatar', [
+        'avatar' => $file,
+    ]);
+
+    Storage::disk('avatars')->assertExists($file->hashName());
+});
+```
+
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_avatars_can_be_uploaded(): void
     {
-        public function test_avatars_can_be_uploaded(): void
-        {
-            Storage::fake('avatars');
+        Storage::fake('avatars');
 
-            $file = UploadedFile::fake()->image('avatar.jpg');
+        $file = UploadedFile::fake()->image('avatar.jpg');
 
-            $response = $this->post('/avatar', [
-                'avatar' => $file,
-            ]);
+        $response = $this->post('/avatar', [
+            'avatar' => $file,
+        ]);
 
-            Storage::disk('avatars')->assertExists($file->hashName());
-        }
+        Storage::disk('avatars')->assertExists($file->hashName());
     }
+}
+```
 
 Если вы хотите подтвердить, что переданный файл не существует, вы можете использовать метод `assertMissing` фасада `Storage`:
 
@@ -528,21 +812,33 @@ Laravel предлагает способ последовательного т�
 
 Laravel также позволяет отображать шаблоны без имитации HTTP-запроса к приложению. Для этого вы можете вызвать в своем тесте метод `view`. Метод `view` принимает имя шаблона и необязательный массив данных. Метод возвращает экземпляр `Illuminate\Testing\TestView`, который предлагает несколько методов для удобных утверждений о содержимом шаблона:
 
-    <?php
+```php tab=Pest
+<?php
 
-    namespace Tests\Feature;
+test('a welcome view can be rendered', function () {
+    $view = $this->view('welcome', ['name' => 'Taylor']);
 
-    use Tests\TestCase;
+    $view->assertSee('Taylor');
+});
+```
 
-    class ExampleTest extends TestCase
+```php tab=PHPUnit
+<?php
+
+namespace Tests\Feature;
+
+use Tests\TestCase;
+
+class ExampleTest extends TestCase
+{
+    public function test_a_welcome_view_can_be_rendered(): void
     {
-        public function test_a_welcome_view_can_be_rendered(): void
-        {
-            $view = $this->view('welcome', ['name' => 'Taylor']);
+        $view = $this->view('welcome', ['name' => 'Taylor']);
 
-            $view->assertSee('Taylor');
-        }
+        $view->assertSee('Taylor');
     }
+}
+```
 
 Класс `TestView` содержит следующие методы утверждения: `assertSee`, `assertSeeInOrder`, `assertSeeText`, `assertSeeTextInOrder`, `assertDontSee` и `assertDontSeeText`.
 
@@ -601,6 +897,7 @@ Laravel также позволяет отображать шаблоны без
 - [assertDontSeeText](#assert-dont-see-text)
 - [assertDownload](#assert-download)
 - [assertExactJson](#assert-exact-json)
+- [assertExactJsonStructure](#assert-exact-json-structure)
 - [assertForbidden](#assert-forbidden)
 - [assertFound](#assert-found)
 - [assertGone](#assert-gone)
@@ -752,6 +1049,15 @@ $response->assertConflict();
 
     $response->assertExactJson(array $data);
 
+<a name="assert-exact-json-structure"></a>
+#### assertExactJsonStructure
+
+Убедитесь, что ответ содержит точное соответствие заданной структуре JSON:
+
+    $response->assertExactJsonStructure(array $data);
+
+Этот метод является более строгим вариантом [assertJsonStructure](#assert-json-structure). В отличие от `assertJsonStructure`, этот метод завершится ошибкой, если ответ содержит какие-либо ключи, которые явно не включены в ожидаемую структуру JSON.
+
 <a name="assert-forbidden"></a>
 #### assertForbidden
 
@@ -801,7 +1107,7 @@ $response->assertConflict();
 
     $response->assertJson(array $data, $strict = false);
 
-Метод `assertJson` преобразует ответ в массив и использует `PHPUnit::assertArraySubset` для проверки того, что переданный массив существует в ответе JSON, возвращаемом приложением. Итак, если в ответе JSON есть другие свойства, этот тест все равно будет проходить, пока присутствует переданный фрагмент.
+Метод `assertJson` преобразует ответ в массив для проверки того, что переданный массив существует в ответе JSON, возвращаемом приложением. Итак, если в ответе JSON есть другие свойства, этот тест все равно будет проходить, пока присутствует переданный фрагмент.
 
 <a name="assert-json-count"></a>
 #### assertJsonCount
@@ -1307,7 +1613,13 @@ $response->assertConflict();
 
 Кроме того, данные шаблона могут быть доступны как переменные массива в ответе, что позволяет вам удобно инспектировать их:
 
-    $this->assertEquals('Taylor', $response['name']);
+```php tab=Pest
+expect($response['name'])->toBe('Taylor');
+```
+
+```php tab=PHPUnit
+$this->assertEquals('Taylor', $response['name']);
+```
 
 <a name="assert-view-has-all"></a>
 #### assertViewHasAll
