@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: bb4650831ec4567c07d72f7a9949a95f90c04035
 ---
 
 # Контроллеры
@@ -52,7 +52,7 @@ php artisan make:controller UserController
 Когда входящий запрос совпадает с указанным URI маршрута, будет вызван метод `show` класса `App\Http\Controllers\UserController`, и параметры маршрута будут переданы методу.
 
 > [!NOTE]  
-> Контроллеры **не требуют** расширения базового класса. Однако у вас не будет доступа к удобным функциям, таким как методы `middleware` и`authorize`.
+> Контроллеры **не требуют** расширения базового класса. Однако иногда бывает удобно расширить базовый класс контроллера, содержащий методы, которые должны использоваться всеми вашими контроллерами.
 
 <a name="single-action-controllers"></a>
 ### Контроллеры одиночного действия
@@ -95,31 +95,51 @@ php artisan make:controller ProvisionServer --invokable
 
 [Посредник](/docs/{{version}}/middleware) может быть назначен маршрутам контроллера в ваших файлах маршрутизации:
 
-    Route::get('profile', [UserController::class, 'show'])->middleware('auth');
+    Route::get('/profile', [UserController::class, 'show'])->middleware('auth');
 
-Или вам может быть удобно указать посредника в конструкторе вашего контроллера. Используя метод `middleware` в конструкторе вашего контроллера, вы можете назначить посредника действиям контроллера:
+Или вам может быть удобно указать посредника в классе контроллера. Для этого ваш контроллер должен реализовать интерфейс `HasMiddleware`, который требует, чтобы контроллер имел статический метод `middleware`. Из этого метода вы можете вернуть массив посредников, которые должны быть применены к действиям контроллера:
 
-    class UserController extends Controller
+    <?php
+
+    namespace App\Http\Controllers;
+
+    use App\Http\Controllers\Controller;
+    use Illuminate\Routing\Controllers\HasMiddleware;
+    use Illuminate\Routing\Controllers\Middleware;
+
+    class UserController extends Controller implements HasMiddleware
     {
         /**
-         * Создать новый экземпляр контроллера.
+         * Получить посредников, которые должны быть назначены контроллеру.
          */
-        public function __construct()
+        public static function middleware(): array
         {
-            $this->middleware('auth');
-            $this->middleware('log')->only('index');
-            $this->middleware('subscribed')->except('store');
+            return [
+                'auth',
+                new Middleware('log', only: ['index']),
+                new Middleware('subscribed', except: ['store']),
+            ];
         }
+        
+        // ...
     }
 
-Контроллеры также позволяют регистрировать посредника с помощью замыкания. Это обеспечивает удобный способ определения встроенного посредника для одного контроллера без определения целого класса посредника:
+Вы также можете определить посредника контроллера через замыкание, что обеспечивает удобный способ определения встроенного посредника без написания целого класса посредника:
 
     use Closure;
     use Illuminate\Http\Request;
 
-    $this->middleware(function (Request $request, Closure $next) {
-        return $next($request);
-    });
+    /**
+     * Get the middleware that should be assigned to the controller.
+     */
+    public static function middleware(): array
+    {
+        return [
+            function (Request $request, Closure $next) {
+                return $next($request);
+            },
+        ];
+    }
 
 <a name="resource-controllers"></a>
 ## Ресурсные контроллеры
@@ -151,7 +171,7 @@ php artisan make:controller PhotoController --resource
 #### Действия, выполняемые ресурсными контроллерами
 
 | Метод     | URI                    | Действие | Имя маршрута   |
-|-----------|------------------------|----------|----------------|
+| --------- | ---------------------- | -------- | -------------- |
 | GET       | `/photos`              | index    | photos.index   |
 | GET       | `/photos/create`       | create   | photos.create  |
 | POST      | `/photos`              | store    | photos.store   |
@@ -279,7 +299,7 @@ php artisan make:controller PhotoController --api
 Это объявление маршрута будет определять следующие маршруты:
 
 | Метод     | URI                               | Действие | Имя маршрута           |
-|-----------|-----------------------------------|----------|------------------------|
+| --------- | --------------------------------- | -------- | ---------------------- |
 | GET       | `/photos/{photo}/comments`        | index    | photos.comments.index  |
 | GET       | `/photos/{photo}/comments/create` | create   | photos.comments.create |
 | POST      | `/photos/{photo}/comments`        | store    | photos.comments.store  |
@@ -334,10 +354,10 @@ php artisan make:controller PhotoController --api
 <a name="restful-localizing-resource-uris"></a>
 ### Локализация URI ресурсов
 
-По умолчанию `Route::resource` создает URI ресурсов с использованием английских глаголов и правила для множественного числа. Если вам нужно локализовать команды действия `create` и `edit`, вы можете использовать метод `Route::resourceVerbs`. Это можно сделать в начале метода `boot` внутри `App\Providers\RouteServiceProvider` вашего приложения:
+По умолчанию `Route::resource` создает URI ресурсов с использованием английских глаголов и правила для множественного числа. Если вам нужно локализовать команды действия `create` и `edit`, вы можете использовать метод `Route::resourceVerbs`. Это можно сделать в начале метода `boot` внутри `App\Providers\AppServiceProvider` вашего приложения:
 
     /**
-     * Определить связывание модели и маршрута, фильтры шаблонов и т.д.
+     * Загрузка любых служб приложения.
      */
     public function boot(): void
     {
@@ -345,8 +365,6 @@ php artisan make:controller PhotoController --api
             'create' => 'crear',
             'edit' => 'editar',
         ]);
-
-        // ...
     }
 
 Поддержка множественного числа в Laravel доступна для [нескольких разных языков, которые вы можете настроить в соответствии с вашими потребностями](/docs/{{version}}/localization#pluralization-language). После настройки глаголов и языка множественного числа, регистрация маршрута ресурса, такого как `Route::resource('publicacion', PublicacionController::class)`, будет создавать следующие URI:
@@ -387,11 +405,11 @@ Route::singleton('profile', ProfileController::class);
 Вышеописанное определение зарегистрирует следующие маршруты.
 Как видно, маршруты "создания" не регистрируются для них, и зарегистрированные маршруты не принимают идентификатор, поскольку может существовать только один экземпляр ресурса:
 
-Verb      | URI                               | Action       | Route Name
-----------|-----------------------------------|--------------|---------------------
-GET       | `/profile`                        | show         | profile.show
-GET       | `/profile/edit`                   | edit         | profile.edit
-PUT/PATCH | `/profile`                        | update       | profile.update
+| Метод     | URI             | Действие | Имя маршрута   |
+| --------- | --------------- | -------- | -------------- |
+| GET       | `/profile`      | show     | profile.show   |
+| GET       | `/profile/edit` | edit     | profile.edit   |
+| PUT/PATCH | `/profile`      | update   | profile.update |
 
 Одиночные ресурсы также могут быть вложены в стандартный ресурс:
 
@@ -401,11 +419,11 @@ Route::singleton('photos.thumbnail', ThumbnailController::class);
 
 В этом примере ресурс `photos` будет содержать все [стандартные маршруты ресурса](#actions-handled-by-resource-controller), однако ресурс `thumbnail` будет синглтон-ресурсом со следующими маршрутами:
 
-| Глагол    | URI                                | Действие | Имя маршрута             |
-|-----------|------------------------------------|----------|--------------------------|
-| GET       | `/photos/{photo}/thumbnail`        | show     | photos.thumbnail.show    |
-| GET       | `/photos/{photo}/thumbnail/edit`   | edit     | photos.thumbnail.edit    |
-| PUT/PATCH | `/photos/{photo}/thumbnail`        | update   | photos.thumbnail.update  |
+| Метод     | URI                                | Действие | Имя маршрута            |
+| --------- | ---------------------------------- | -------- | ----------------------- |
+| GET       | `/photos/{photo}/thumbnail`        | show     | photos.thumbnail.show   |
+| GET       | `/photos/{photo}/thumbnail/edit`   | edit     | photos.thumbnail.edit   |
+| PUT/PATCH | `/photos/{photo}/thumbnail`        | update   | photos.thumbnail.update |
 
 <a name="creatable-singleton-resources"></a>
 #### Создание синглтон-ресурсов
@@ -418,8 +436,8 @@ Route::singleton('photos.thumbnail', ThumbnailController::class)->creatable();
 
 В этом случае будут зарегистрированы следующие маршруты. Как видно, также будет зарегистрирован маршрут `DELETE` для создаваемых синглтон-ресурсов:
 
-| Глагол    | URI                                    | Действие | Имя маршрута             |
-|-----------|----------------------------------------|----------|--------------------------|
+| Метод     | URI                                    | Действие | Имя маршрута             |
+| --------- | -------------------------------------- | -------- | ------------------------ |
 | GET       | `/photos/{photo}/thumbnail/create`     | create   | photos.thumbnail.create  |
 | POST      | `/photos/{photo}/thumbnail`            | store    | photos.thumbnail.store   |
 | GET       | `/photos/{photo}/thumbnail`            | show     | photos.thumbnail.show    |
