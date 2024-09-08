@@ -1,5 +1,5 @@
 ---
-git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
+git: 2eca63c072ec744450de8d45383a3e209205c51d
 ---
 
 # Развертывание
@@ -16,7 +16,7 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 
 <!-- <div class="content-list" markdown="1"> -->
 
-- PHP >= 8.1
+- PHP >= 8.2
 - Расширение PHP Ctype
 - Расширение PHP cURL
 - Расширение PHP DOM
@@ -30,8 +30,6 @@ git: 46c2634ef5a4f15427c94a3157b626cf5bd3937f
 - Расширение PHP Session
 - Расширение PHP Tokenizer
 - Расширение PHP XML
-
-
 
 <!-- </div> -->
 
@@ -72,6 +70,7 @@ server {
         fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
     }
 
     location ~ /\.(?!well-known).* {
@@ -80,20 +79,38 @@ server {
 }
 ```
 
+<a name="frankenphp"></a>
+### FrankenPHP
+
+[FrankenPHP](https://frankenphp.dev/) также может использоваться для обслуживания ваших приложений Laravel. FrankenPHP — это современный сервер приложений PHP, написанный на Go. Чтобы обслуживать PHP-приложение Laravel с помощью FrankenPHP, вы можете просто вызвать его команду `php-server`:
+
+```shell
+frankenphp php-server -r public/
+```
+
+Чтобы воспользоваться более мощными функциями, поддерживаемыми FrankenPHP, такими как интеграция [Laravel Octane](/docs/{{version}}/octane), HTTP/3, современное сжатие или возможность упаковывать приложения Laravel как автономные двоичные файлы, обратитесь к [документации Laravel](https://frankenphp.dev/docs/laravel/) FrankenPHP.
+
+<a name="directory-permissions"></a>
+### Разрешения для папок
+
+Laravel потребуется разрешение на запись в каталоги `bootstrap/cache` и `storage`, поэтому вам следует убедиться, что у владельца процесса веб-сервера есть разрешение на запись в эти каталоги.
+
 <a name="optimization"></a>
 ## Оптимизация
 
-<a name="autoloader-optimization"></a>
-### Оптимизация автозагрузчика
-
-При развертывании в эксплуатационном окружении, убедитесь, что вы оптимизировали файл автозагрузчика классов Composer, чтобы он мог быстро найти нужный файл для загрузки конкретного класса:
+При развертывании вашего приложения в рабочей среде необходимо кэшировать различные файлы, включая вашу конфигурацию, события, маршруты и представления. Laravel предоставляет единственную удобную команду Artisan `optimize`, которая кэширует все эти файлы. Эту команду обычно следует вызывать как часть процесса развертывания вашего приложения:
 
 ```shell
-composer install --optimize-autoloader --no-dev
+php artisan optimize
 ```
 
-> [!NOTE] 
-> Помимо оптимизации автозагрузчика, вы всегда должны обязательно включать файл `composer.lock` в репозиторий системы управления версиями вашего проекта. Зависимости вашего проекта могут быть установлены намного быстрее, если присутствует файл `composer.lock`.
+Метод `optimize:clear` можно использовать для удаления всех файлов кэша, созданных командой `optimize`, а также всех ключей в драйвере кэша по умолчанию:
+
+```shell
+php artisan optimize:clear
+```
+
+В следующей документации мы обсудим каждую из команд детальной оптимизации, выполняемых командой `optimize`.
 
 <a name="optimizing-configuration-loading"></a>
 ### Кеширование конфигурации
@@ -110,7 +127,7 @@ composer install --optimize-autoloader --no-dev
 <a name="caching-events"></a>
 ### Кеширование событий
 
-Если ваше приложение использует [поиск событий](/docs/{{version}}/events#event-discovery), вам следует кешировать отображение событий на слушателей вашего приложения во время процесса развертывания. Это можно сделать, вызвав команду `event:cache` Artisan во время развертывания:
+Вам следует кэшировать автоматически обнаруженное событие вашего приложения для сопоставления со слушателями во время процесса развертывания. Это можно сделать, вызвав команду Artisan `event:cache` во время развертывания:
 
 ```shell
 php artisan event:cache
@@ -146,6 +163,23 @@ php artisan view:cache
 
 > [!WARNING]
 > **В вашем эксплуатационном окружении это значение всегда должно быть `false`. Если значение для переменной `APP_DEBUG` установлено как `true`, то вы рискуете раскрыть конфиденциальные значения конфигурации конечным пользователям вашего приложения.**
+
+<a name="the-health-route"></a>
+## Маршрут здоровья
+
+Laravel включает встроенный маршрут проверки работоспособности, который можно использовать для отслеживания статуса вашего приложения. В производственной среде этот маршрут можно использовать для сообщения о состоянии вашего приложения монитору работоспособности, балансировщику нагрузки или системе оркестрации, такой как Kubernetes.
+
+По умолчанию маршрут проверки работоспособности обслуживается по адресу `/up` и возвращает HTTP-ответ 200, если приложение загрузилось без исключений. В противном случае будет возвращен HTTP-ответ 500. Вы можете настроить URI для этого маршрута в файле `bootstrap/app` вашего приложения:
+
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up', // [tl! удалить]
+        health: '/status', // [tl! добавить]
+    )
+
+When HTTP requests are made to this route, Laravel will also dispatch a `Illuminate\Foundation\Events\DiagnosingHealth` event, allowing you to perform additional health checks relevant to your application. Within a [listener](/docs/{{version}}/events) for this event, you may check your application's database or cache status. If you detect a problem with your application, you may simply throw an exception from the listener.
+Когда HTTP-запросы отправляются по этому маршруту, Laravel также отправляет событие `Illuminate\Foundation\Events\DiagnosingHealth`, позволяя вам выполнять дополнительные проверки работоспособности, относящиеся к вашему приложению. В [слушателе](/docs/{{version}}/events) для этого события вы можете проверить состояние базы данных или кэша вашего приложения. Если вы обнаружите проблему в своем приложении, вы можете просто выдать исключение из прослушивателя.
 
 <a name="deploying-with-forge-or-vapor"></a>
 ## Развертывание с помощью Forge / Vapor
