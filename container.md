@@ -1,5 +1,5 @@
 ---
-git: 9f36b02f2c2968ad2c6945df79d9eaf31dfdd224
+git: 62eb15f6637ea5810edf8a9aeae0e621003cff0f
 ---
 
 # Контейнер служб (service container)
@@ -189,7 +189,7 @@ $this->app->singletonIf(Transistor::class, function (Application $app) {
      * Создать новый экземпляр класса.
      */
     public function __construct(
-        protected EventPusher $pusher
+        protected EventPusher $pusher,
     ) {}
 
 <a name="contextual-binding"></a>
@@ -361,7 +361,7 @@ $this->app->singletonIf(Transistor::class, function (Application $app) {
      * Создать новый экземпляр класса.
      */
     public function __construct(
-        protected Container $container
+        protected Container $container,
     ) {}
 
 <a name="automatic-injection"></a>
