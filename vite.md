@@ -1,5 +1,5 @@
 ---
-git: 7b696f268160e61c19eeed2a9c49191ae89f6bf1
+git: 06c3df075e79917d1a6afbbb587a17545f2ac7c9
 ---
 
 # Сборка ресурсов (Vite)
@@ -379,6 +379,8 @@ createInertiaApp({
 });
 ```
 
+Если вы используете функцию разделения кода Vite с Inertia, мы рекомендуем настроить [предварительную выборку актива](#asset-prefetching).
+
 > [!NOTE]  
 > Стартовые наборы Laravel ([starter kits](/docs/{{version}}/starter-kits)) уже включают правильную конфигурацию Laravel, Inertia и Vite. Ознакомьтесь с [Laravel Breeze](/docs/{{version}}/starter-kits#breeze-and-inertia) чтобы быстро начать работу с Laravel, Inertia и Vite.
 
@@ -532,6 +534,71 @@ export default defineConfig({
 
 ```blade
 <img src="{{ Vite::image('logo.png') }}" alt="Laravel Logo">
+```
+
+<a name="asset-prefetching"></a>
+## Предварительная выборка активов
+
+При создании SPA с использованием функции разделения кода Vite необходимые ресурсы извлекаются при навигации по каждой странице. Такое поведение может привести к задержке рендеринга пользовательского интерфейса. Если это проблема для выбранной вами среды внешнего интерфейса, Laravel предлагает возможность предварительной загрузки ресурсов JavaScript и CSS вашего приложения при начальной загрузке страницы.
+
+Вы можете поручить Laravel выполнить предварительную выборку ваших ресурсов, вызвав метод `Vite::prefetch` в методе `boot` [поставщика услуг](/docs/{{version}}/providers):
+
+```php
+<?php
+namespace App\Providers;
+use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
+class AppServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        // ...
+    }
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        Vite::prefetch(concurrency: 3);
+    }
+}
+```
+
+В приведенном выше примере ресурсы будут предварительно загружены с максимум `3` одновременными загрузками при каждой загрузке страницы. Вы можете изменить параллелизм в соответствии с потребностями вашего приложения или не указывать ограничение параллелизма, если приложение должно загружать все ресурсы одновременно:
+
+```php
+/**
+ * Bootstrap any application services.
+ */
+public function boot(): void
+{
+    Vite::prefetch();
+}
+```
+
+По умолчанию предварительная выборка начинается при возникновении события [_load_](https://developer.mozilla.org/en-US/docs/Web/API/Window/load_event). Если вы хотите настроить время начала предварительной загрузки, вы можете указать событие, которое Vite будет прослушивать.
+
+```php
+/**
+ * Bootstrap any application services.
+ */
+public function boot(): void
+{
+    Vite::prefetch(event: 'vite:prefetch');
+}
+```
+
+Учитывая приведенный выше код, предварительная выборка теперь начнется, когда вы вручную отправите событие `vite:prefetch` для объекта `window`. Например, вы можете начать предварительную загрузку через три секунды после загрузки страницы:
+
+```html
+<script>
+    addEventListener('load', () => setTimeout(() => {
+        dispatchEvent(new Event('vite:prefetch'))
+    }, 3000))
+</script>
 ```
 
 <a name="custom-base-urls"></a>
