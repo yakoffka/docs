@@ -1,5 +1,5 @@
 ---
-git: eeb8b2839390f6e5c317978cdea3c5056681ebf3
+git: 62eb15f6637ea5810edf8a9aeae0e621003cff0f
 ---
 
 # Очереди
@@ -183,8 +183,9 @@ php artisan make:job ProcessPodcast
     /**
      * Создать новый экземпляр задания.
      */
-    public function __construct(Podcast $podcast)
-    {
+    public function __construct(
+        Podcast $podcast,
+    ) {
         $this->podcast = $podcast->withoutRelations();
     }
 
@@ -197,9 +198,8 @@ php artisan make:job ProcessPodcast
      */
     public function __construct(
         #[WithoutRelations]
-        public Podcast $podcast
-    ) {
-    }
+        public Podcast $podcast,
+    ) {}
 
 Если задание получает коллекцию или массив моделей Eloquent вместо одной модели, отношения между моделями в этой коллекции не будут восстановлены при десериализации и выполнении задания. Это необходимо для предотвращения чрезмерного использования ресурсов в заданиях, связанных с большим количеством моделей.
 
