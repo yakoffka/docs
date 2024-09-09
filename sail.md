@@ -331,11 +331,11 @@ sail dusk
 <a name="selenium-on-apple-silicon"></a>
 #### Selenium на Apple Silicon
 
-Если ваш локальный компьютер содержит чип Apple Silicon, ваша служба `selenium` должна использовать образ `seleniarm/standalone-chromium`:
+Если ваш локальный компьютер содержит чип Apple Silicon, ваша служба `selenium` должна использовать образ `selenium/standalone-chromium`:
 
 ```yaml
 selenium:
-    image: 'seleniarm/standalone-chromium'
+    image: 'selenium/standalone-chromium'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     volumes:
