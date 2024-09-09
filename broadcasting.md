@@ -1,5 +1,5 @@
 ---
-git: eb257374f1b48862572c496e1e500ba550dd807a
+git: 62eb15f6637ea5810edf8a9aeae0e621003cff0f
 ---
 
 # Трансляция (broadcast) событий
