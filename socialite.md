@@ -1,5 +1,5 @@
 ---
-git: 6d89df95cecd6c23227a306bd32ca21ac92ff767
+git: 040ab151f8350470f8df5d00bfba05f56c155d12
 ---
 
 # Пакет Laravel Socialite
