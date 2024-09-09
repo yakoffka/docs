@@ -1,5 +1,5 @@
 ---
-git: fe1d4567fe5402750c54d3f6277f9b84c8b441a1
+git: 62eb15f6637ea5810edf8a9aeae0e621003cff0f
 ---
 
 # События (Events)
@@ -204,10 +204,7 @@ php artisan event:list
         /**
          * Создать слушателя событий.
          */
-        public function __construct()
-        {
-            // ...
-        }
+        public function __construct() {}
 
         /**
          * Обработать событие.
