@@ -224,7 +224,7 @@ use Illuminate\Support\Facades\Route;
 
 Иногда бывает необходимым отслеживание сегментов URI в вашем маршруте. Например, вам может потребоваться отследить идентификатор пользователя из URL-адреса. Вы можете сделать это, указав параметры маршрута:
 
-    Route::get('/user/{id}', function (sting $id) {
+    Route::get('/user/{id}', function (string $id) {
         return 'User '.$id;
     });
 
